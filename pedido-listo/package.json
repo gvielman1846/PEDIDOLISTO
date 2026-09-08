@@ -10,7 +10,12 @@
     "web": "npm run dev --workspace=web-catalog",
     "mobile": "npm run start --workspace=mobile",
     "build:web": "npm run build --workspace=web-catalog",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "firebase:setup": "node scripts/setup-firebase.mjs",
+    "firebase:deploy": "firebase deploy --only firestore:rules,firestore:indexes,storage"
+  },
+  "devDependencies": {
+    "firebase-tools": "^15.29.0"
   },
   "engines": {
     "node": ">=18"
