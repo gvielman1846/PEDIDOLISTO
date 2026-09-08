@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(businessId) {
+      return request.auth != null
+        && request.auth.uid == get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId;
+    }
+
+    match /businesses/{businessId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if isOwner(businessId);
+
+      match /categories/{catId} {
+        allow read: if true;
+        allow write: if isOwner(businessId);
+      }
+
+      match /products/{productId} {
+        allow read: if true;
+        allow write: if isOwner(businessId);
+      }
+
+      match /orders/{orderId} {
+        allow read: if isOwner(businessId);
+        allow create: if true;
+        allow update, delete: if isOwner(businessId);
+      }
+    }
+  }
+}

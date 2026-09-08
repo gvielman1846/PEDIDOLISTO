@@ -1,0 +1,18 @@
+{
+  "name": "pedido-listo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "web": "npm run dev --workspace=web-catalog",
+    "mobile": "npm run start --workspace=mobile",
+    "build:web": "npm run build --workspace=web-catalog",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
