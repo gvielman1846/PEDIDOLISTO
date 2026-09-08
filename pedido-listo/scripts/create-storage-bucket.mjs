@@ -1,5 +1,5 @@
 /**
- * Create Firebase default Storage bucket (requires Blaze plan).
+ * Create Firebase default Storage bucket (requires Blaze plan + firebase login).
  * Run: node scripts/create-storage-bucket.mjs
  */
 import { createRequire } from 'node:module';
@@ -13,6 +13,18 @@ const PROJECT_ID = 'pedidolisto-app';
 
 const apiv2 = require('firebase-tools/lib/apiv2');
 const api = require('firebase-tools/lib/api');
+const auth = require('firebase-tools/lib/auth');
+const requireAuth = require('firebase-tools/lib/requireAuth');
+
+async function initAuth() {
+  const options = { project: PROJECT_ID, projectId: PROJECT_ID, cwd: root };
+  const account = auth.getGlobalDefaultAccount();
+  if (account) {
+    auth.setActiveAccount(options, account);
+  }
+  await requireAuth.requireAuth(options);
+  return options;
+}
 
 async function getDefaultBucket() {
   const client = new apiv2.Client({
@@ -37,14 +49,37 @@ async function createDefaultBucket() {
 console.log('=== Crear bucket de Storage ===\n');
 
 try {
+  await initAuth();
+} catch {
+  console.error('Error: ejecuta primero: npx firebase login\n');
+  process.exit(1);
+}
+
+let needsCreate = false;
+
+try {
   const existing = await getDefaultBucket();
-  console.log('Bucket ya existe:', existing?.bucket?.name ?? existing);
-  process.exit(0);
+  if (existing?.bucket?.name) {
+    console.log('Bucket ya existe:', existing.bucket.name);
+    process.exit(0);
+  }
+  needsCreate = true;
 } catch (err) {
-  if (err?.status !== 404) {
-    console.log('Bucket no encontrado, creando...\n');
+  // 404 o bucket aun no provisionado
+  if (err?.status === 404 || String(err?.message ?? '').includes('defaultBucket')) {
+    needsCreate = true;
+  } else {
+    console.error('Error al consultar bucket:', err.message ?? err);
+    process.exit(1);
   }
 }
+
+if (!needsCreate) {
+  console.log('Bucket listo.');
+  process.exit(0);
+}
+
+console.log('Bucket no encontrado, creando...\n');
 
 try {
   const result = await createDefaultBucket();
@@ -52,7 +87,7 @@ try {
   console.log(result?.bucket?.name ?? JSON.stringify(result, null, 2));
 } catch (err) {
   console.error('Error al crear bucket:', err.message ?? err);
-  console.error('\nAbre la consola y clic en Comenzar:');
+  console.error('\nAlternativa: abre la consola y clic en "Comenzar":');
   console.error(`https://console.firebase.google.com/project/${PROJECT_ID}/storage`);
   process.exit(1);
 }
