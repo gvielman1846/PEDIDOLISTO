@@ -1,8 +1,10 @@
 /**
  * Seed demo business for PedidoListo.
+ * Requires: Anonymous Auth enabled in Firebase Console.
  * Run: node scripts/seed-demo.mjs
  */
 import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -32,22 +34,31 @@ const app = initializeApp({
   appId: env.VITE_FIREBASE_APP_ID,
 });
 
+const auth = getAuth(app);
 const db = getFirestore(app);
 const businessId = 'demo';
 
-await setDoc(doc(db, 'businesses', businessId), {
-  name: 'Cocina de Doña Carmen',
-  slug: 'cocina-dona-carmen',
-  whatsapp: '525513690163',
-  address: 'Col. Centro, CDMX',
-  deliveryFee: 25,
-  minOrder: 80,
-  openTime: '09:00',
-  closeTime: '20:00',
-  isOpen: true,
-  plan: 'free',
-  createdAt: new Date(),
-}, { merge: true });
+console.log('Iniciando sesion anonima...');
+const { user } = await signInAnonymously(auth);
+console.log(`Autenticado como: ${user.uid}`);
+
+await setDoc(
+  doc(db, 'businesses', businessId),
+  {
+    name: 'Cocina de Doña Carmen',
+    slug: 'cocina-dona-carmen',
+    whatsapp: '525513690163',
+    address: 'Col. Centro, CDMX',
+    deliveryFee: 25,
+    minOrder: 80,
+    openTime: '09:00',
+    closeTime: '20:00',
+    isOpen: true,
+    plan: 'free',
+    createdAt: new Date(),
+  },
+  { merge: true }
+);
 
 console.log(`Negocio demo creado: businesses/${businessId}`);
 console.log('Abre la app movil para reclamar ownership al iniciar.');
