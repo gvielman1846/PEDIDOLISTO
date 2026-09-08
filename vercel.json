@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd pedido-listo && npm install",
+  "buildCommand": "cd pedido-listo && npm run build --workspace=web-catalog",
+  "outputDirectory": "pedido-listo/apps/web-catalog/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
