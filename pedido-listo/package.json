@@ -14,7 +14,8 @@
     "firebase:setup": "node scripts/setup-firebase.mjs",
     "firebase:deploy": "firebase deploy --only firestore:rules,firestore:indexes,storage",
     "firebase:storage": "node scripts/deploy-storage.mjs",
-    "vercel:env": "node scripts/vercel-env.mjs"
+    "vercel:env": "node scripts/vercel-env.mjs",
+    "seed:demo": "node scripts/seed-demo.mjs"
   },
   "devDependencies": {
     "firebase-tools": "^15.29.0"

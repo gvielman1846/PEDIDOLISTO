@@ -11,8 +11,9 @@ function getEnv(key: string): string {
   } catch {
     // not in Vite context
   }
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env[key] ?? '';
+  if (typeof globalThis !== 'undefined' && 'process' in globalThis) {
+    const env = (globalThis as { process?: { env?: Record<string, string> } }).process?.env;
+    return env?.[key] ?? '';
   }
   return '';
 }

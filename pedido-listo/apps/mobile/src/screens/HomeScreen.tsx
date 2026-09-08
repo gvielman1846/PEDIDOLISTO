@@ -37,6 +37,14 @@ export function HomeScreen({ kitchen, productCount, onNavigate }: Props) {
         </View>
       </View>
 
+      <TouchableOpacity style={styles.action} onPress={() => onNavigate('orders')}>
+        <Text style={styles.actionEmoji}>🛒</Text>
+        <View>
+          <Text style={styles.actionTitle}>Ver pedidos</Text>
+          <Text style={styles.actionDesc}>Lista en tiempo real para preparar</Text>
+        </View>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.action} onPress={() => onNavigate('menu')}>
         <Text style={styles.actionEmoji}>📋</Text>
         <View>

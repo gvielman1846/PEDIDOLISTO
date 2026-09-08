@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@pedido-listo/firebase": "*",
     "@pedido-listo/types": "*",
     "expo": "~57.0.20",
     "expo-clipboard": "~8.0.4",
     "expo-status-bar": "~57.0.1",
+    "firebase": "^11.3.0",
     "react": "19.2.3",
     "react-native": "0.86.3"
   },

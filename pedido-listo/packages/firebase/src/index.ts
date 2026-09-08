@@ -11,3 +11,6 @@ export {
   getCategories,
   getProducts,
 } from './queries';
+export { createOrder, subscribeToOrders, updateOrderStatus } from './orders';
+export type { CreateOrderInput } from './orders';
+export { signInOwner, claimBusinessOwnership } from './auth';

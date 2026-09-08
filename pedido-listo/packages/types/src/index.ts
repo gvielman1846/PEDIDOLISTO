@@ -51,7 +51,22 @@ export interface CheckoutData {
   note?: string;
 }
 
+export const DEMO_BUSINESS_ID = 'demo';
+
+export type OrderStatus = 'nuevo' | 'preparando' | 'listo' | 'entregado';
+
+export const ORDER_STATUS_FLOW: OrderStatus[] = ['nuevo', 'preparando', 'listo', 'entregado'];
+
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  nuevo: 'Nuevo',
+  preparando: 'Preparando',
+  listo: 'Listo',
+  entregado: 'Entregado',
+};
+
 export interface Order {
+  id?: string;
+  businessId?: string;
   items: CartItem[];
   subtotal: number;
   deliveryFee: number;
@@ -60,6 +75,7 @@ export interface Order {
   deliveryType: DeliveryType;
   address?: string;
   note?: string;
+  status: OrderStatus;
   createdAt?: Date;
   source: 'whatsapp';
 }
