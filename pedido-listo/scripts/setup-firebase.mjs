@@ -5,13 +5,12 @@
  * Usage: node scripts/setup-firebase.mjs
  */
 import { execSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
-const PROJECT_ID = process.env.FIREBASE_PROJECT_ID ?? 'pedidolisto-app';
 const DISPLAY_NAME = 'PedidoListo';
 
 function run(cmd, opts = {}) {
@@ -23,14 +22,30 @@ function runCapture(cmd) {
   return execSync(cmd, { cwd: root, encoding: 'utf8' }).trim();
 }
 
-function projectExists(id) {
+function getDefaultProjectId() {
   try {
-    const list = runCapture('npx firebase projects:list --json');
-    const projects = JSON.parse(list).result ?? [];
-    return projects.some((p) => p.projectId === id);
+    const rc = JSON.parse(readFileSync(join(root, '.firebaserc'), 'utf8'));
+    return rc.projects?.default ?? 'pedidolisto-app';
   } catch {
-    return false;
+    return 'pedidolisto-app';
   }
+}
+
+function setDefaultProjectId(id) {
+  writeFileSync(
+    join(root, '.firebaserc'),
+    JSON.stringify({ projects: { default: id } }, null, 2) + '\n'
+  );
+}
+
+function listProjects() {
+  const raw = runCapture('npx firebase projects:list --json');
+  const parsed = JSON.parse(raw);
+  return parsed.result ?? parsed.projects ?? [];
+}
+
+function projectExists(id, projects) {
+  return projects.some((p) => p.projectId === id);
 }
 
 function parseSdkConfig(output) {
@@ -44,51 +59,55 @@ function parseSdkConfig(output) {
 
 console.log('=== PedidoListo Firebase Setup ===\n');
 
+let projects;
 try {
-  runCapture('npx firebase projects:list --limit 1');
-} catch {
+  projects = listProjects();
+  console.log(`Sesion activa. Proyectos encontrados: ${projects.length}`);
+} catch (e) {
   console.error('\nError: ejecuta primero: npx firebase login\n');
+  console.error(e.message);
   process.exit(1);
 }
 
-if (!projectExists(PROJECT_ID)) {
-  console.log(`Creando proyecto: ${PROJECT_ID}`);
+let projectId = process.env.FIREBASE_PROJECT_ID ?? getDefaultProjectId();
+
+if (!projectExists(projectId, projects)) {
+  console.log(`Creando proyecto: ${projectId}`);
   try {
-    run(`npx firebase projects:create ${PROJECT_ID} --display-name "${DISPLAY_NAME}"`);
+    run(`npx firebase projects:create ${projectId} --display-name "${DISPLAY_NAME}"`);
+    setDefaultProjectId(projectId);
   } catch {
-    const alt = `${PROJECT_ID}-${Date.now().toString(36).slice(-4)}`;
+    const alt = `${projectId}-${Date.now().toString(36).slice(-4)}`;
     console.log(`ID ocupado, probando: ${alt}`);
     run(`npx firebase projects:create ${alt} --display-name "${DISPLAY_NAME}"`);
-    writeFileSync(
-      join(root, '.firebaserc'),
-      JSON.stringify({ projects: { default: alt } }, null, 2) + '\n'
-    );
+    projectId = alt;
+    setDefaultProjectId(projectId);
   }
+  projects = listProjects();
 }
 
-run(`npx firebase use ${PROJECT_ID}`);
+run(`npx firebase use ${projectId}`);
 
 console.log('\nCreando base de datos Firestore (si no existe)...');
 try {
-  run('npx firebase firestore:databases:create --location=us-central1 --database "(default)"');
+  run(`npx firebase firestore:databases:create --location=us-central1 --database "(default)" --project ${projectId}`);
 } catch {
   console.log('Firestore ya existe o se creara en el primer deploy.');
 }
 
 console.log('\nRegistrando app web...');
-let sdkOutput = '';
 try {
-  sdkOutput = runCapture(`npx firebase apps:create WEB "PedidoListo Web" --project ${PROJECT_ID} --json`);
+  runCapture(`npx firebase apps:create WEB "PedidoListo Web" --project ${projectId} --json`);
 } catch {
   console.log('App web ya registrada, obteniendo config...');
 }
 
 let config = {};
 try {
-  const apps = JSON.parse(runCapture(`npx firebase apps:list WEB --project ${PROJECT_ID} --json`));
+  const apps = JSON.parse(runCapture(`npx firebase apps:list WEB --project ${projectId} --json`));
   const appId = apps.result?.[0]?.appId;
   if (appId) {
-    const sdk = runCapture(`npx firebase apps:sdkconfig WEB ${appId} --project ${PROJECT_ID}`);
+    const sdk = runCapture(`npx firebase apps:sdkconfig WEB ${appId} --project ${projectId}`);
     config = parseSdkConfig(sdk);
   }
 } catch (e) {
@@ -96,13 +115,18 @@ try {
 }
 
 console.log('\nDesplegando reglas Firestore y Storage...');
-run('npx firebase deploy --only firestore:rules,firestore:indexes,storage');
+try {
+  run(`npx firebase deploy --only firestore:rules,firestore:indexes,storage --project ${projectId}`);
+} catch (e) {
+  console.warn('\nDeploy parcial. Si Storage falla, activalo en Firebase Console y vuelve a correr:');
+  console.warn('npm run firebase:deploy\n');
+}
 
 const envLines = [
   `VITE_FIREBASE_API_KEY=${config.apiKey ?? ''}`,
-  `VITE_FIREBASE_AUTH_DOMAIN=${config.authDomain ?? `${PROJECT_ID}.firebaseapp.com`}`,
-  `VITE_FIREBASE_PROJECT_ID=${config.projectId ?? PROJECT_ID}`,
-  `VITE_FIREBASE_STORAGE_BUCKET=${config.storageBucket ?? `${PROJECT_ID}.firebasestorage.app`}`,
+  `VITE_FIREBASE_AUTH_DOMAIN=${config.authDomain ?? `${projectId}.firebaseapp.com`}`,
+  `VITE_FIREBASE_PROJECT_ID=${config.projectId ?? projectId}`,
+  `VITE_FIREBASE_STORAGE_BUCKET=${config.storageBucket ?? `${projectId}.firebasestorage.app`}`,
   `VITE_FIREBASE_MESSAGING_SENDER_ID=${config.messagingSenderId ?? ''}`,
   `VITE_FIREBASE_APP_ID=${config.appId ?? ''}`,
 ];
@@ -115,21 +139,16 @@ console.log(envLines.join('\n'));
 
 console.log(`
 === PASOS MANUALES EN FIREBASE CONSOLE (2 min) ===
-1. https://console.firebase.google.com/project/${PROJECT_ID}/authentication/providers
+1. https://console.firebase.google.com/project/${projectId}/authentication/providers
    - Activar "Correo electronico/Contrasena"
    - Activar "Google" y elegir email de soporte
 
-2. https://console.firebase.google.com/project/${PROJECT_ID}/storage
+2. https://console.firebase.google.com/project/${projectId}/storage
    - Si Storage pide activarse, clic en "Comenzar"
 
 === VERCEL (copia las variables de .env.local) ===
 Settings > Environment Variables > agrega cada VITE_FIREBASE_*
 Luego: Deployments > Redeploy
-
-O con CLI (si tienes vercel login):
-  cd apps/web-catalog
-  npx vercel env add VITE_FIREBASE_API_KEY production
-  (repite para cada variable)
 `);
 
 console.log('\nSetup completado.');
