@@ -114,12 +114,20 @@ try {
   console.warn('No se pudo leer SDK config automaticamente:', e.message);
 }
 
-console.log('\nDesplegando reglas Firestore y Storage...');
+console.log('\nDesplegando reglas Firestore...');
 try {
-  run(`npx firebase deploy --only firestore:rules,firestore:indexes,storage --project ${projectId}`);
+  run(`npx firebase deploy --only firestore:rules --project ${projectId}`);
 } catch (e) {
-  console.warn('\nDeploy parcial. Si Storage falla, activalo en Firebase Console y vuelve a correr:');
-  console.warn('npm run firebase:deploy\n');
+  console.warn('\nFirestore rules fallaron:', e.message);
+}
+
+console.log('\nDesplegando Storage (requiere activar Storage en consola si es proyecto nuevo)...');
+try {
+  run(`npx firebase deploy --only storage --project ${projectId}`);
+} catch {
+  console.warn('\nStorage no listo aun. Abre y clic "Comenzar":');
+  console.warn(`https://console.firebase.google.com/project/${projectId}/storage`);
+  console.warn('Luego corre: npm run firebase:storage\n');
 }
 
 const envLines = [
