@@ -14,6 +14,7 @@
     "firebase:setup": "node scripts/setup-firebase.mjs",
     "firebase:deploy": "firebase deploy --only firestore:rules,firestore:indexes,storage",
     "firebase:storage": "node scripts/deploy-storage.mjs",
+    "firebase:storage:setup": "node scripts/create-storage-bucket.mjs && node scripts/deploy-storage.mjs",
     "vercel:env": "node scripts/vercel-env.mjs",
     "seed:demo": "node scripts/seed-demo.mjs"
   },
