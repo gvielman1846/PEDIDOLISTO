@@ -60,7 +60,7 @@ const businessData = {
   name: 'Cocina Chef Cueto',
   slug: 'cocina-chef-cueto',
   whatsapp: '525513690163',
-  address: 'Col. Centro, CDMX',
+  address: 'Alta California Residencial, Tlajomulco',
   deliveryFee: 25,
   minOrder: 80,
   openTime: '09:00',

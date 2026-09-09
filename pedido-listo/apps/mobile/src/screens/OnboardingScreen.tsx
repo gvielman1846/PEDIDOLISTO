@@ -63,7 +63,7 @@ export function OnboardingScreen({ onComplete }: Props) {
           style={styles.input}
           value={neighborhood}
           onChangeText={setNeighborhood}
-          placeholder="Ej. Col. Centro, CDMX"
+          placeholder="Ej. Alta California Residencial, Tlajomulco"
         />
 
         <Text style={styles.label}>Hora de cierre</Text>
