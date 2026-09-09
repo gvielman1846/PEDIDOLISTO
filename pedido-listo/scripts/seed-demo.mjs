@@ -1,11 +1,12 @@
 /**
- * Seed demo business + menu for PedidoListo.
- * Requires: Anonymous Auth enabled + Firestore rules deployed.
+ * Seed demo business + menu + product images for PedidoListo.
+ * Requires: Anonymous Auth enabled + Firestore/Storage rules deployed.
  * Run: npm run firebase:deploy && npm run seed:demo
  */
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,23 +25,32 @@ function loadEnv() {
   return env;
 }
 
-const categories = [
-  { id: 'antojitos', name: 'Antojitos', order: 0 },
-  { id: 'platos', name: 'Platos fuertes', order: 1 },
-  { id: 'bebidas', name: 'Bebidas', order: 2 },
-  { id: 'postres', name: 'Postres', order: 3 },
-];
+function loadDemoMenu() {
+  const path = join(root, 'apps/web-catalog/src/data/demo-menu.json');
+  return JSON.parse(readFileSync(path, 'utf8'));
+}
 
-const products = [
-  { id: '1', name: 'Tacos de guisado (3 pzas)', description: 'Tinga, picadillo o chicharrón', price: 45, categoryId: 'antojitos', emoji: '🌮', available: true, order: 0 },
-  { id: '2', name: 'Quesadilla grande', description: 'Tortilla de maíz, queso Oaxaca', price: 35, categoryId: 'antojitos', emoji: '🧀', available: true, order: 1 },
-  { id: '3', name: 'Enchiladas verdes', description: 'Pollo, arroz y frijoles', price: 95, categoryId: 'platos', emoji: '🍽️', available: true, order: 0 },
-  { id: '4', name: 'Mole con pollo', description: '2 piezas, arroz y tortillas', price: 110, categoryId: 'platos', emoji: '🍗', available: true, order: 1 },
-  { id: '5', name: 'Pozole chico', description: 'Cerdo o pollo, 500 ml', price: 75, categoryId: 'platos', emoji: '🥣', available: true, order: 2 },
-  { id: '6', name: 'Agua de horchata', description: '1 litro', price: 40, categoryId: 'bebidas', emoji: '🥤', available: true, order: 0 },
-  { id: '7', name: 'Refresco 600 ml', description: 'Coca, Sprite o Manzanita', price: 25, categoryId: 'bebidas', emoji: '🧃', available: true, order: 1 },
-  { id: '8', name: 'Flan napolitano', description: 'Porción individual', price: 35, categoryId: 'postres', emoji: '🍮', available: true, order: 0 },
-];
+function publicImageUrl(imageFile) {
+  return `/images/products/${imageFile}`;
+}
+
+async function uploadProductImage(storage, businessId, productId, imageFile) {
+  const localPath = join(root, 'assets/demo-products', imageFile);
+  const buffer = readFileSync(localPath);
+  const ext = imageFile.split('.').pop()?.toLowerCase() ?? 'jpg';
+  const contentType = ext === 'svg' ? 'image/svg+xml' : `image/${ext}`;
+  const path = `businesses/${businessId}/products/${productId}.${ext}`;
+  const fileRef = ref(storage, path);
+
+  const upload = uploadBytes(fileRef, buffer, { contentType }).then(() => getDownloadURL(fileRef));
+  const timeout = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Storage upload timeout')), 15000);
+  });
+
+  return Promise.race([upload, timeout]);
+}
+
+const { categories, products } = loadDemoMenu();
 
 const env = loadEnv();
 const app = initializeApp({
@@ -54,6 +64,7 @@ const app = initializeApp({
 
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 const businessId = 'demo';
 
 const businessData = {
@@ -74,8 +85,8 @@ console.log('Iniciando sesion anonima...');
 const { user } = await signInAnonymously(auth);
 console.log(`Autenticado como: ${user.uid}`);
 
-const ref = doc(db, 'businesses', businessId);
-const existing = await getDoc(ref);
+const businessRef = doc(db, 'businesses', businessId);
+const existing = await getDoc(businessRef);
 
 if (existing.exists()) {
   const ownerId = existing.data().ownerId;
@@ -85,10 +96,10 @@ if (existing.exists()) {
     );
   }
   console.log('Actualizando negocio demo existente...');
-  await setDoc(ref, businessData, { merge: true });
+  await setDoc(businessRef, businessData, { merge: true });
 } else {
   console.log('Creando negocio demo...');
-  await setDoc(ref, businessData);
+  await setDoc(businessRef, businessData);
 }
 
 for (const category of categories) {
@@ -100,18 +111,28 @@ for (const category of categories) {
 console.log(`Categorias: ${categories.length}`);
 
 for (const product of products) {
+  let imageUrl = publicImageUrl(product.imageFile);
+  try {
+    console.log(`Subiendo imagen: ${product.name}...`);
+    imageUrl = await uploadProductImage(storage, businessId, product.id, product.imageFile);
+    console.log(`  -> Storage OK`);
+  } catch (err) {
+    console.warn(`  -> Storage fallo (${err.message}), usando ${imageUrl}`);
+  }
+
   await setDoc(doc(db, 'businesses', businessId, 'products', product.id), {
     name: product.name,
     description: product.description,
     price: product.price,
     categoryId: product.categoryId,
     emoji: product.emoji,
+    imageUrl,
     available: product.available,
     order: product.order,
     createdAt: serverTimestamp(),
   });
 }
-console.log(`Productos: ${products.length}`);
+console.log(`Productos: ${products.length} (con fotos en Storage)`);
 
 console.log(`Negocio demo listo: businesses/${businessId}`);
 console.log(`Catalogo web: /${businessData.slug}`);

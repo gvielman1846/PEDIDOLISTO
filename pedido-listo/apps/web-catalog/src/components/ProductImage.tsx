@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Product } from '@pedido-listo/types';
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
@@ -12,10 +13,18 @@ export function getProductGradient(categoryId: string): string {
 }
 
 export function ProductImage({ product }: { product: Product }) {
-  if (product.imageUrl) {
+  const [failed, setFailed] = useState(false);
+  const showImage = product.imageUrl && !failed;
+
+  if (showImage) {
     return (
       <div className="card-media">
-        <img src={product.imageUrl} alt={product.name} loading="lazy" />
+        <img
+          src={product.imageUrl}
+          alt={product.name}
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
       </div>
     );
   }

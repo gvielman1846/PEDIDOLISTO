@@ -2,12 +2,25 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    match /businesses/{businessId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null
+    function isOwner(businessId) {
+      return request.auth != null
         && request.auth.uid == firestore.get(
           /databases/(default)/documents/businesses/$(businessId)
         ).data.ownerId;
+    }
+
+    function isUnownedBusiness(businessId) {
+      let data = firestore.get(/databases/(default)/documents/businesses/$(businessId)).data;
+      return !('ownerId' in data) || data.ownerId == null;
+    }
+
+    function canSeedUnowned(businessId) {
+      return request.auth != null && isUnownedBusiness(businessId);
+    }
+
+    match /businesses/{businessId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(businessId) || canSeedUnowned(businessId);
     }
   }
 }

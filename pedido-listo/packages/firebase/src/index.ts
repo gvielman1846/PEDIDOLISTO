@@ -16,3 +16,4 @@ export type { CatalogData } from './queries';
 export { createOrder, subscribeToOrders, updateOrderStatus } from './orders';
 export type { CreateOrderInput } from './orders';
 export { signInOwner, claimBusinessOwnership } from './auth';
+export { productImagePath, uploadProductImage } from './storage';
