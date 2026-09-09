@@ -2,8 +2,8 @@ import type { Business, Category, Product } from '@pedido-listo/types';
 
 export const DEMO_BUSINESS: Business = {
   id: 'demo',
-  name: 'Cocina de Doña Carmen',
-  slug: 'cocina-dona-carmen',
+  name: 'Cocina Chef Cueto',
+  slug: 'cocina-chef-cueto',
   whatsapp: '525513690163',
   address: 'Col. Centro, CDMX',
   deliveryFee: 25,

@@ -83,3 +83,21 @@ export async function getProducts(businessId: string): Promise<Product[]> {
   const snap = await getDocs(q);
   return snap.docs.map((d) => mapProduct(d.id, d.data()));
 }
+
+export interface CatalogData {
+  business: Business;
+  categories: Category[];
+  products: Product[];
+}
+
+export async function loadCatalogBySlug(slug: string): Promise<CatalogData | null> {
+  const business = await getBusinessBySlug(slug);
+  if (!business?.id) return null;
+
+  const [categories, products] = await Promise.all([
+    getCategories(business.id),
+    getProducts(business.id),
+  ]);
+
+  return { business, categories, products };
+}

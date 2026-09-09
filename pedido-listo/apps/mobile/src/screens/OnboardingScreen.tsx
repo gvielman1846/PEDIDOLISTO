@@ -46,7 +46,7 @@ export function OnboardingScreen({ onComplete }: Props) {
           style={styles.input}
           value={name}
           onChangeText={setName}
-          placeholder="Ej. Cocina de Doña Carmen"
+          placeholder="Ej. Cocina Chef Cueto"
         />
 
         <Text style={styles.label}>WhatsApp para pedidos</Text>

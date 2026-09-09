@@ -10,7 +10,9 @@ export {
   getBusinessById,
   getCategories,
   getProducts,
+  loadCatalogBySlug,
 } from './queries';
+export type { CatalogData } from './queries';
 export { createOrder, subscribeToOrders, updateOrderStatus } from './orders';
 export type { CreateOrderInput } from './orders';
 export { signInOwner, claimBusinessOwnership } from './auth';

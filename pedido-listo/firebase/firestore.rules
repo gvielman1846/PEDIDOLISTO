@@ -14,20 +14,35 @@ service cloud.firestore {
         && request.resource.data.ownerId == request.auth.uid;
     }
 
+    function isUnownedBusiness(businessId) {
+      let data = get(/databases/$(database)/documents/businesses/$(businessId)).data;
+      return !('ownerId' in data) || data.ownerId == null;
+    }
+
+    function canSeedUnownedBusiness(businessId) {
+      return request.auth != null
+        && isUnownedBusiness(businessId)
+        && !('ownerId' in request.resource.data);
+    }
+
+    function canSeedUnownedMenu(businessId) {
+      return request.auth != null && isUnownedBusiness(businessId);
+    }
+
     match /businesses/{businessId} {
       allow read: if true;
       allow create: if request.auth != null;
-      allow update: if isOwner(businessId) || canClaimBusiness(businessId);
+      allow update: if isOwner(businessId) || canClaimBusiness(businessId) || canSeedUnownedBusiness(businessId);
       allow delete: if isOwner(businessId);
 
       match /categories/{catId} {
         allow read: if true;
-        allow write: if isOwner(businessId);
+        allow write: if isOwner(businessId) || canSeedUnownedMenu(businessId);
       }
 
       match /products/{productId} {
         allow read: if true;
-        allow write: if isOwner(businessId);
+        allow write: if isOwner(businessId) || canSeedUnownedMenu(businessId);
       }
 
       match /orders/{orderId} {

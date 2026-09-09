@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function ShareScreen({ kitchen }: Props) {
-  const slug = kitchen.slug ?? 'cocina-dona-carmen';
+  const slug = kitchen.slug ?? 'cocina-chef-cueto';
   const catalogUrl = `https://pedidolisto.mx/${slug}`;
 
   async function copyLink() {
