@@ -99,3 +99,20 @@ export function buildWhatsAppUrl(whatsapp: string, message: string): string {
   const phone = whatsapp.replace(/\D/g, '');
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
+
+export function openWhatsApp(url: string): void {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    window.location.assign(url);
+    return;
+  }
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}

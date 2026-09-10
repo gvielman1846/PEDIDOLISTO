@@ -6,6 +6,7 @@ import {
   buildWhatsAppUrl,
   calculateOrderTotal,
   formatMXN,
+  openWhatsApp,
 } from '@pedido-listo/whatsapp';
 
 interface Props {
@@ -48,6 +49,12 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
       note: note.trim() || undefined,
     };
 
+    const message = buildOrderMessage(business, items, checkout);
+    const url = buildWhatsAppUrl(business.whatsapp, message);
+
+    // Abrir WhatsApp de inmediato (en movil window.open falla despues de await).
+    openWhatsApp(url);
+
     setSending(true);
     try {
       if (isFirebaseConfigured() && business.id) {
@@ -59,13 +66,10 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
           checkout,
         });
       }
-
-      const message = buildOrderMessage(business, items, checkout);
-      const url = buildWhatsAppUrl(business.whatsapp, message);
-      window.open(url, '_blank');
+      onClose();
     } catch (error) {
       console.error(error);
-      alert('No se pudo guardar el pedido. Intenta de nuevo.');
+      alert('El pedido se abrio en WhatsApp, pero no se guardo en el sistema. La cocina puede no verlo en la app.');
     } finally {
       setSending(false);
     }
