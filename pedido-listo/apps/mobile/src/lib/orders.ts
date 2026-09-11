@@ -1,13 +1,10 @@
 import {
-  DEMO_BUSINESS_ID,
   ORDER_STATUS_FLOW,
   ORDER_STATUS_LABELS,
   type Order,
   type OrderStatus,
 } from '@pedido-listo/types';
 import { colors } from '../theme';
-
-export const BUSINESS_ID = DEMO_BUSINESS_ID;
 
 export function formatTime(date?: Date): string {
   if (!date) return '--:--';

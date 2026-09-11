@@ -75,6 +75,7 @@ export function buildOrderMessage(
     separator(),
     `*DATOS DEL CLIENTE*`,
     `Nombre: ${checkout.customerName}`,
+    `Celular: ${checkout.customerPhone}`,
     `Entrega: ${deliveryLabel}`
   );
 
@@ -95,22 +96,28 @@ export function buildOrderMessage(
   return sections.join('\n');
 }
 
+export function normalizeWhatsAppPhone(whatsapp: string): string {
+  const digits = whatsapp.replace(/\D/g, '');
+  if (!digits) return '';
+
+  // Mexico: mobiles often need 521 + 10 digits for WhatsApp deep links.
+  if (digits.length === 10) return `521${digits}`;
+  if (digits.length === 12 && digits.startsWith('52') && !digits.startsWith('521')) {
+    return `521${digits.slice(2)}`;
+  }
+
+  return digits;
+}
+
 export function buildWhatsAppUrl(whatsapp: string, message: string): string {
-  const phone = whatsapp.replace(/\D/g, '');
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  const phone = normalizeWhatsAppPhone(whatsapp);
+  return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
 }
 
 export function openWhatsApp(url: string): void {
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-  if (isMobile) {
-    window.location.assign(url);
-    return;
-  }
-
   const link = document.createElement('a');
   link.href = url;
-  link.target = '_blank';
+  link.target = '_self';
   link.rel = 'noopener noreferrer';
   document.body.appendChild(link);
   link.click();

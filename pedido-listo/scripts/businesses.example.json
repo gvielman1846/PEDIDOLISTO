@@ -1,0 +1,26 @@
+{
+  "businesses": [
+    {
+      "id": "cocina-maria",
+      "name": "Cocina de María",
+      "slug": "cocina-maria",
+      "whatsapp": "5255512345678",
+      "address": "Col. Jardines, Tlajomulco",
+      "deliveryFee": 25,
+      "minOrder": 80,
+      "openTime": "10:00",
+      "closeTime": "19:00",
+      "copyMenuFromDemo": true
+    },
+    {
+      "id": "cocina-rosa",
+      "name": "Cocina de Doña Rosa",
+      "slug": "cocina-dona-rosa",
+      "whatsapp": "5255598765432",
+      "address": "Centro, Guadalajara",
+      "deliveryFee": 30,
+      "minOrder": 100,
+      "copyMenuFromDemo": true
+    }
+  ]
+}

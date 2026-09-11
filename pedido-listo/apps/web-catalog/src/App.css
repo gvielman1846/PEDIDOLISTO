@@ -586,6 +586,16 @@ body {
   cursor: pointer;
 }
 
+.wa-fallback-link {
+  display: block;
+  text-align: center;
+  margin-top: 8px;
+  color: var(--accent);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
 /* ── Loading / error states ── */
 .app-shell--centered {
   display: flex;

@@ -1,12 +1,18 @@
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
   where,
   orderBy,
   type DocumentData,
+  type Unsubscribe,
 } from 'firebase/firestore';
 import type { Business, Category, Product } from '@pedido-listo/types';
 import { getDb } from './config';
@@ -82,6 +88,102 @@ export async function getProducts(businessId: string): Promise<Product[]> {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => mapProduct(d.id, d.data()));
+}
+
+export function subscribeToProducts(
+  businessId: string,
+  onChange: (products: Product[]) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  const db = getDb();
+  const q = query(
+    collection(db, 'businesses', businessId, 'products'),
+    orderBy('order', 'asc')
+  );
+
+  return onSnapshot(
+    q,
+    (snap) => onChange(snap.docs.map((d) => mapProduct(d.id, d.data()))),
+    (err) => onError?.(err)
+  );
+}
+
+export interface CreateProductInput {
+  name: string;
+  description: string;
+  price: number;
+  categoryId: string;
+  emoji?: string;
+  imageUrl?: string;
+  order: number;
+}
+
+/**
+ * Reserva el id antes de escribir, para poder subir la imagen a una ruta que ya
+ * conoce el producto y crear el documento una sola vez, con todo o con nada.
+ */
+export function newProductId(businessId: string): string {
+  const db = getDb();
+  return doc(collection(db, 'businesses', businessId, 'products')).id;
+}
+
+export async function createProduct(
+  businessId: string,
+  productId: string,
+  input: CreateProductInput
+): Promise<void> {
+  const db = getDb();
+  await setDoc(doc(db, 'businesses', businessId, 'products', productId), {
+    name: input.name,
+    description: input.description,
+    price: input.price,
+    categoryId: input.categoryId,
+    emoji: input.emoji ?? null,
+    imageUrl: input.imageUrl ?? null,
+    available: true,
+    order: input.order,
+    createdAt: serverTimestamp(),
+  });
+}
+
+export async function updateProductAvailability(
+  businessId: string,
+  productId: string,
+  available: boolean
+): Promise<void> {
+  const db = getDb();
+  await updateDoc(doc(db, 'businesses', businessId, 'products', productId), { available });
+}
+
+export async function updateProduct(
+  businessId: string,
+  productId: string,
+  input: {
+    name: string;
+    description: string;
+    price: number;
+    categoryId: string;
+    emoji?: string;
+    imageUrl?: string;
+  }
+): Promise<void> {
+  const db = getDb();
+  const data: Record<string, unknown> = {
+    name: input.name,
+    description: input.description,
+    price: input.price,
+    categoryId: input.categoryId,
+    emoji: input.emoji ?? null,
+  };
+
+  if (input.imageUrl) data.imageUrl = input.imageUrl;
+
+  await updateDoc(doc(db, 'businesses', businessId, 'products', productId), data);
+}
+
+export async function deleteProduct(businessId: string, productId: string): Promise<void> {
+  const db = getDb();
+  await deleteDoc(doc(db, 'businesses', businessId, 'products', productId));
 }
 
 export interface CatalogData {

@@ -46,6 +46,7 @@ export type DeliveryType = 'delivery' | 'pickup';
 
 export interface CheckoutData {
   customerName: string;
+  customerPhone: string;
   deliveryType: DeliveryType;
   address?: string;
   note?: string;
@@ -72,6 +73,7 @@ export interface Order {
   deliveryFee: number;
   total: number;
   customerName: string;
+  customerPhone?: string;
   deliveryType: DeliveryType;
   address?: string;
   note?: string;

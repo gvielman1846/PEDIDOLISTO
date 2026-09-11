@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import { buildCatalogUrl } from '../lib/catalog';
 import { colors } from '../theme';
 
 interface KitchenData {
@@ -13,7 +14,7 @@ interface Props {
 
 export function ShareScreen({ kitchen }: Props) {
   const slug = kitchen.slug ?? 'cocina-chef-cueto';
-  const catalogUrl = `https://pedidolisto.mx/${slug}`;
+  const catalogUrl = buildCatalogUrl(slug);
 
   async function copyLink() {
     await Clipboard.setStringAsync(catalogUrl);

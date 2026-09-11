@@ -12,19 +12,26 @@ import {
 import { colors } from '../theme';
 
 interface Props {
-  onComplete: (data: { name: string; whatsapp: string; neighborhood: string; closeTime: string }) => void;
+  onComplete: (data: {
+    catalogSlug: string;
+    whatsapp: string;
+    neighborhood: string;
+    closeTime: string;
+  }) => void;
+  loading?: boolean;
+  error?: string | null;
 }
 
-export function OnboardingScreen({ onComplete }: Props) {
-  const [name, setName] = useState('');
+export function OnboardingScreen({ onComplete, loading = false, error = null }: Props) {
+  const [catalogSlug, setCatalogSlug] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [closeTime, setCloseTime] = useState('20:00');
 
   function handleSubmit() {
-    if (!name.trim() || !whatsapp.trim()) return;
+    if (!catalogSlug.trim() || !whatsapp.trim()) return;
     onComplete({
-      name: name.trim(),
+      catalogSlug: catalogSlug.trim(),
       whatsapp: whatsapp.trim(),
       neighborhood: neighborhood.trim(),
       closeTime,
@@ -38,16 +45,21 @@ export function OnboardingScreen({ onComplete }: Props) {
     >
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.emoji}>🍲</Text>
-        <Text style={styles.title}>Configura tu cocina</Text>
-        <Text style={styles.subtitle}>En 2 minutos tendrás tu menú listo para compartir</Text>
+        <Text style={styles.title}>Conecta tu cocina</Text>
+        <Text style={styles.subtitle}>Vincula tu negocio para ver pedidos en tiempo real</Text>
 
-        <Text style={styles.label}>Nombre de tu cocina</Text>
+        <Text style={styles.label}>Link de tu catálogo</Text>
         <TextInput
           style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="Ej. Cocina Chef Cueto"
+          value={catalogSlug}
+          onChangeText={setCatalogSlug}
+          placeholder="restaurant-antiguos"
+          autoCapitalize="none"
+          autoCorrect={false}
         />
+        <Text style={styles.hint}>Solo la parte final del link: pedidolisto.../restaurant-antiguos</Text>
+
+        {error && <Text style={styles.error}>{error}</Text>}
 
         <Text style={styles.label}>WhatsApp para pedidos</Text>
         <TextInput
@@ -74,8 +86,8 @@ export function OnboardingScreen({ onComplete }: Props) {
           placeholder="20:00"
         />
 
-        <TouchableOpacity style={styles.btn} onPress={handleSubmit}>
-          <Text style={styles.btnText}>Crear mi menú</Text>
+        <TouchableOpacity style={[styles.btn, loading && styles.btnDisabled]} onPress={handleSubmit} disabled={loading}>
+          <Text style={styles.btnText}>{loading ? 'Conectando...' : 'Entrar a mi cocina'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -97,6 +109,8 @@ const styles = StyleSheet.create({
     padding: 14,
     fontSize: 16,
   },
+  hint: { fontSize: 12, color: colors.muted, marginTop: 6, lineHeight: 18 },
+  error: { fontSize: 13, color: colors.danger, marginTop: 10, lineHeight: 18 },
   btn: {
     backgroundColor: colors.accent,
     borderRadius: 14,
@@ -104,5 +118,6 @@ const styles = StyleSheet.create({
     marginTop: 28,
     alignItems: 'center',
   },
+  btnDisabled: { opacity: 0.7 },
   btnText: { color: 'white', fontWeight: '700', fontSize: 16 },
 });

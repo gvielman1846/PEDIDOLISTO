@@ -5,8 +5,11 @@
   "dependencies": {
     "@pedido-listo/firebase": "*",
     "@pedido-listo/types": "*",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "expo": "~57.0.20",
     "expo-clipboard": "~8.0.4",
+    "expo-image": "~57.0.4",
+    "expo-image-picker": "~57.0.16",
     "expo-status-bar": "~57.0.1",
     "firebase": "^11.3.0",
     "react": "19.2.3",

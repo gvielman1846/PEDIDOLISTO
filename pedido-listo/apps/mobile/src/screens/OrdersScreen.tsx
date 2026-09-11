@@ -9,12 +9,17 @@ import {
 } from 'react-native';
 import type { Order } from '@pedido-listo/types';
 import { useOrders } from '../hooks/useOrders';
-import { BUSINESS_ID, formatMXN, formatTime, getStatusColor, ORDER_STATUS_LABELS } from '../lib/orders';
+import { formatMXN, formatTime, getStatusColor, ORDER_STATUS_LABELS } from '../lib/orders';
+import { formatCustomerPhone } from '../lib/contact';
 import { OrderDetailSheet } from './OrderDetailSheet';
 import { colors } from '../theme';
 
-export function OrdersScreen() {
-  const { orders, loading, error } = useOrders(BUSINESS_ID);
+interface Props {
+  businessId: string;
+}
+
+export function OrdersScreen({ businessId }: Props) {
+  const { orders, loading, error } = useOrders(businessId);
   const [selected, setSelected] = useState<Order | null>(null);
 
   if (loading) {
@@ -54,6 +59,9 @@ export function OrdersScreen() {
               </View>
             </View>
             <Text style={styles.customer}>{item.customerName}</Text>
+            {item.customerPhone ? (
+              <Text style={styles.phone}>{formatCustomerPhone(item.customerPhone)}</Text>
+            ) : null}
             <View style={styles.cardBottom}>
               <Text style={styles.items}>{item.items.length} platillo{item.items.length === 1 ? '' : 's'}</Text>
               <Text style={styles.total}>{formatMXN(item.total)}</Text>
@@ -64,7 +72,7 @@ export function OrdersScreen() {
 
       <OrderDetailSheet
         order={selected}
-        businessId={BUSINESS_ID}
+        businessId={businessId}
         onClose={() => setSelected(null)}
       />
     </View>
@@ -90,6 +98,7 @@ const styles = StyleSheet.create({
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   badgeText: { fontSize: 12, fontWeight: '700' },
   customer: { fontSize: 17, fontWeight: '700', color: colors.text, marginTop: 8 },
+  phone: { fontSize: 13, color: colors.muted, marginTop: 2 },
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   items: { fontSize: 13, color: colors.muted },
   total: { fontSize: 16, fontWeight: '800', color: colors.accentDark },

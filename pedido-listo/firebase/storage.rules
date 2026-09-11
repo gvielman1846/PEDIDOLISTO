@@ -2,16 +2,19 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    // Mismo criterio que firestore.rules: un campo ownerId ausente, null o vacio
+    // significa negocio sin dueno, y nunca se lee de forma que aborte la regla.
+    function ownerOf(businessId) {
+      let data = firestore.get(/databases/(default)/documents/businesses/$(businessId)).data;
+      return 'ownerId' in data && data.ownerId != '' ? data.ownerId : null;
+    }
+
     function isOwner(businessId) {
-      return request.auth != null
-        && request.auth.uid == firestore.get(
-          /databases/(default)/documents/businesses/$(businessId)
-        ).data.ownerId;
+      return request.auth != null && ownerOf(businessId) == request.auth.uid;
     }
 
     function isUnownedBusiness(businessId) {
-      let data = firestore.get(/databases/(default)/documents/businesses/$(businessId)).data;
-      return !('ownerId' in data) || data.ownerId == null;
+      return ownerOf(businessId) == null;
     }
 
     function canSeedUnowned(businessId) {

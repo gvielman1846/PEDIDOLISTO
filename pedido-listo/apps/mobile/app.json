@@ -20,6 +20,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permite elegir fotos de tus platillos desde la galeria.",
+          "cameraPermission": "Permite tomar fotos de tus platillos."
+        }
+      ]
+    ]
   }
 }

@@ -46,6 +46,14 @@ export function getDb(): Firestore {
   return db;
 }
 
+/**
+ * React Native necesita `initializeAuth` con persistencia de AsyncStorage; sin eso
+ * cada recarga genera un uid anonimo nuevo. La app movil registra su instancia aqui.
+ */
+export function setFirebaseAuth(instance: Auth): void {
+  auth = instance;
+}
+
 export function getFirebaseAuth(): Auth {
   if (!auth) auth = getAuth(getFirebaseApp());
   return auth;

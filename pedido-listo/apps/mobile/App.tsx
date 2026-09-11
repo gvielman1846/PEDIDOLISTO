@@ -1,78 +1,122 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { DEMO_BUSINESS_ID } from '@pedido-listo/types';
-import { claimBusinessOwnership, signInOwner } from '@pedido-listo/firebase';
+import { claimBusinessOwnership, getBusinessBySlug, signInOwner } from '@pedido-listo/firebase';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { OrdersScreen } from './src/screens/OrdersScreen';
 import { MenuScreen } from './src/screens/MenuScreen';
 import { ShareScreen } from './src/screens/ShareScreen';
 import { initFirebase } from './src/lib/firebase';
+import { useProducts } from './src/hooks/useProducts';
+import { slugify } from './src/lib/catalog';
 import { colors } from './src/theme';
 
 type Tab = 'home' | 'orders' | 'menu' | 'share';
+
+interface ConnectionContext {
+  stage: string;
+  uid: string;
+  businessId: string;
+}
+
+function describeConnectionError(err: unknown, ctx: ConnectionContext): string {
+  const code = (err as { code?: string })?.code;
+
+  const summary =
+    code === 'permission-denied'
+      ? `Firestore rechazo el paso "${ctx.stage}". Revisa las reglas publicadas en Firebase.`
+      : err instanceof Error
+        ? err.message
+        : 'No se pudo conectar con Firebase';
+
+  const details = [
+    code ? `codigo: ${code}` : null,
+    ctx.businessId ? `negocio: ${ctx.businessId}` : null,
+    ctx.uid ? `uid: ${ctx.uid}` : null,
+  ].filter(Boolean);
+
+  return details.length ? `${summary}\n\n${details.join('\n')}` : summary;
+}
 
 interface KitchenData {
   name: string;
   whatsapp: string;
   neighborhood: string;
   closeTime: string;
-  slug?: string;
+  slug: string;
   businessId: string;
 }
 
 export default function App() {
   const [kitchen, setKitchen] = useState<KitchenData | null>(null);
-  const [tab, setTab] = useState<Tab>('orders');
-  const [productCount, setProductCount] = useState(4);
-  const [authReady, setAuthReady] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
+  const [connecting, setConnecting] = useState(false);
+  const [onboardingError, setOnboardingError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!kitchen) return;
+  async function handleOnboardingComplete(data: {
+    catalogSlug: string;
+    whatsapp: string;
+    neighborhood: string;
+    closeTime: string;
+  }) {
+    setConnecting(true);
+    setOnboardingError(null);
 
-    initFirebase();
-    signInOwner()
-      .then(() => claimBusinessOwnership(kitchen.businessId))
-      .then(() => setAuthReady(true))
-      .catch((err) => setAuthError(err.message));
-  }, [kitchen]);
+    const ctx: ConnectionContext = { stage: 'iniciar Firebase', uid: '', businessId: '' };
 
-  function handleOnboardingComplete(data: Omit<KitchenData, 'businessId'>) {
-    setKitchen({ ...data, businessId: DEMO_BUSINESS_ID });
+    try {
+      initFirebase();
+
+      ctx.stage = 'iniciar sesion anonima';
+      ctx.uid = await signInOwner();
+
+      ctx.stage = 'buscar el negocio';
+      const slug = slugify(data.catalogSlug);
+      const business = await getBusinessBySlug(slug);
+
+      if (!business?.id) {
+        throw new Error(`No encontramos un negocio con el link "${slug}".`);
+      }
+
+      ctx.businessId = business.id;
+      ctx.stage = 'reclamar el negocio';
+      await claimBusinessOwnership(business.id);
+
+      setKitchen({
+        name: business.name,
+        whatsapp: data.whatsapp,
+        neighborhood: data.neighborhood,
+        closeTime: data.closeTime,
+        slug: business.slug,
+        businessId: business.id,
+      });
+    } catch (err) {
+      setOnboardingError(describeConnectionError(err, ctx));
+    } finally {
+      setConnecting(false);
+    }
   }
 
   if (!kitchen) {
     return (
       <>
-        <OnboardingScreen onComplete={handleOnboardingComplete} />
+        <OnboardingScreen
+          onComplete={handleOnboardingComplete}
+          loading={connecting}
+          error={onboardingError}
+        />
         <StatusBar style="dark" />
       </>
     );
   }
 
-  if (!authReady) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.center}>
-          {authError ? (
-            <>
-              <Text style={styles.errorTitle}>No se pudo conectar</Text>
-              <Text style={styles.errorText}>{authError}</Text>
-              <Text style={styles.errorHint}>Corre: node scripts/seed-demo.mjs</Text>
-            </>
-          ) : (
-            <>
-              <ActivityIndicator size="large" color={colors.accent} />
-              <Text style={styles.loadingText}>Conectando con Firebase...</Text>
-            </>
-          )}
-        </View>
-        <StatusBar style="dark" />
-      </SafeAreaView>
-    );
-  }
+  return <KitchenTabs kitchen={kitchen} />;
+}
+
+function KitchenTabs({ kitchen }: { kitchen: KitchenData }) {
+  const [tab, setTab] = useState<Tab>('orders');
+  const { products, categories, loading, error, toggleAvailable, addProduct, editProduct, removeProduct } =
+    useProducts(kitchen.businessId);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -80,12 +124,23 @@ export default function App() {
         {tab === 'home' && (
           <HomeScreen
             kitchen={kitchen}
-            productCount={productCount}
+            productCount={products.length}
             onNavigate={(screen) => setTab(screen as Tab)}
           />
         )}
-        {tab === 'orders' && <OrdersScreen />}
-        {tab === 'menu' && <MenuScreen onProductCountChange={setProductCount} />}
+        {tab === 'orders' && <OrdersScreen businessId={kitchen.businessId} />}
+        {tab === 'menu' && (
+          <MenuScreen
+            products={products}
+            categories={categories}
+            loading={loading}
+            error={error}
+            onToggleAvailable={toggleAvailable}
+            onAddProduct={addProduct}
+            onEditProduct={editProduct}
+            onRemoveProduct={removeProduct}
+          />
+        )}
         {tab === 'share' && <ShareScreen kitchen={kitchen} />}
       </View>
 
@@ -110,11 +165,6 @@ export default function App() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   content: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  loadingText: { marginTop: 12, color: colors.muted },
-  errorTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-  errorText: { marginTop: 8, color: colors.danger, textAlign: 'center' },
-  errorHint: { marginTop: 12, color: colors.muted, fontSize: 13 },
   tabs: {
     flexDirection: 'row',
     borderTopWidth: 1,

@@ -19,16 +19,18 @@ interface Props {
 
 export function CheckoutSheet({ business, items, subtotal, open, onClose }: Props) {
   const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [deliveryType, setDeliveryType] = useState<CheckoutData['deliveryType']>('delivery');
   const [address, setAddress] = useState('');
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
+  const [whatsAppUrl, setWhatsAppUrl] = useState<string | null>(null);
 
   if (!open) return null;
 
   const { deliveryFee, total } = calculateOrderTotal(items, business, deliveryType);
 
-  async function handleSend() {
+  function handleSend() {
     if (subtotal < business.minOrder) {
       alert(`Pedido mínimo: ${formatMXN(business.minOrder)}`);
       return;
@@ -37,13 +39,23 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
       alert('Escribe tu nombre');
       return;
     }
+    const phoneDigits = customerPhone.replace(/\D/g, '');
+    if (phoneDigits.length < 10) {
+      alert('Escribe tu celular a 10 digitos');
+      return;
+    }
     if (deliveryType === 'delivery' && !address.trim()) {
       alert('Escribe tu dirección');
+      return;
+    }
+    if (!business.whatsapp?.replace(/\D/g, '')) {
+      alert('Este negocio no tiene WhatsApp configurado.');
       return;
     }
 
     const checkout: CheckoutData = {
       customerName: customerName.trim(),
+      customerPhone: phoneDigits,
       deliveryType,
       address: address.trim() || undefined,
       note: note.trim() || undefined,
@@ -52,27 +64,29 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
     const message = buildOrderMessage(business, items, checkout);
     const url = buildWhatsAppUrl(business.whatsapp, message);
 
-    // Abrir WhatsApp de inmediato (en movil window.open falla despues de await).
+    setWhatsAppUrl(url);
     openWhatsApp(url);
 
     setSending(true);
-    try {
-      if (isFirebaseConfigured() && business.id) {
-        await createOrder(business.id, {
-          items,
-          subtotal,
-          deliveryFee,
-          total,
-          checkout,
-        });
+    void (async () => {
+      try {
+        if (isFirebaseConfigured() && business.id) {
+          await createOrder(business.id, {
+            items,
+            subtotal,
+            deliveryFee,
+            total,
+            checkout,
+          });
+        }
+        onClose();
+      } catch (error) {
+        console.error(error);
+        alert('WhatsApp deberia haberse abierto. Si no, usa el enlace de abajo. El pedido no se guardo en el sistema.');
+      } finally {
+        setSending(false);
       }
-      onClose();
-    } catch (error) {
-      console.error(error);
-      alert('El pedido se abrio en WhatsApp, pero no se guardo en el sistema. La cocina puede no verlo en la app.');
-    } finally {
-      setSending(false);
-    }
+    })();
   }
 
   return (
@@ -119,6 +133,17 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
             onChange={(e) => setCustomerName(e.target.value)}
             placeholder="Ej. María López"
             autoComplete="name"
+          />
+
+          <label htmlFor="customer-phone">Tu celular</label>
+          <input
+            id="customer-phone"
+            className="input"
+            value={customerPhone}
+            onChange={(e) => setCustomerPhone(e.target.value)}
+            placeholder="5512345678"
+            inputMode="tel"
+            autoComplete="tel"
           />
 
           <label>Tipo de pedido</label>
@@ -170,6 +195,11 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
             </svg>
             {sending ? 'Guardando...' : 'Enviar por WhatsApp'}
           </button>
+          {whatsAppUrl && (
+            <a className="wa-fallback-link" href={whatsAppUrl} target="_self" rel="noopener noreferrer">
+              ¿No abrio WhatsApp? Toca aqui para enviar el pedido
+            </a>
+          )}
           <button type="button" className="btn-ghost" onClick={onClose}>
             Seguir eligiendo
           </button>

@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import type { Order } from '@pedido-listo/types';
 import { updateOrderStatus } from '@pedido-listo/firebase';
+import { openInGoogleMaps, openInWaze } from '../lib/maps';
+import { callCustomer, formatCustomerPhone, whatsappCustomer } from '../lib/contact';
 import {
   formatMXN,
   formatTime,
@@ -85,10 +87,45 @@ export function OrderDetailSheet({ order, businessId, onClose }: Props) {
               <Text style={styles.totalValue}>{formatMXN(order.total)}</Text>
             </View>
 
+            {order.customerPhone && (
+              <>
+                <Text style={styles.section}>Celular</Text>
+                <Text style={styles.noteBox}>{formatCustomerPhone(order.customerPhone)}</Text>
+                <View style={styles.mapRow}>
+                  <TouchableOpacity
+                    style={styles.mapBtn}
+                    onPress={() => whatsappCustomer(order.customerPhone!)}
+                  >
+                    <Text style={styles.mapBtnText}>WhatsApp</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.mapBtn}
+                    onPress={() => callCustomer(order.customerPhone!)}
+                  >
+                    <Text style={styles.mapBtnText}>Llamar</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+
             {order.address && (
               <>
                 <Text style={styles.section}>Direccion</Text>
                 <Text style={styles.noteBox}>{order.address}</Text>
+                <View style={styles.mapRow}>
+                  <TouchableOpacity
+                    style={styles.mapBtn}
+                    onPress={() => openInWaze(order.address!)}
+                  >
+                    <Text style={styles.mapBtnText}>Abrir en Waze</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.mapBtn}
+                    onPress={() => openInGoogleMaps(order.address!)}
+                  >
+                    <Text style={styles.mapBtnText}>Abrir en Maps</Text>
+                  </TouchableOpacity>
+                </View>
               </>
             )}
 
@@ -191,6 +228,16 @@ const styles = StyleSheet.create({
     color: colors.accentDark,
     lineHeight: 22,
   },
+  mapRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
+  mapBtn: {
+    flex: 1,
+    borderWidth: 2,
+    borderColor: colors.accent,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  mapBtnText: { color: colors.accent, fontWeight: '700', fontSize: 13 },
   actionBtn: {
     marginTop: 20,
     borderRadius: 14,
