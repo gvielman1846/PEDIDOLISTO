@@ -1,22 +1,28 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "PedidoListo Cocina",
+    "slug": "pedido-listo-cocina",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pedidolisto.cocina"
     },
     "android": {
+      "package": "com.pedidolisto.cocina",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -29,6 +35,11 @@
           "cameraPermission": "Permite tomar fotos de tus platillos."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "63d13b16-4248-4fcc-84d6-ad57ff2bf498"
+      }
+    }
   }
 }
