@@ -31,7 +31,9 @@ function describeAuthError(err: unknown): string {
   if (code === 'auth/invalid-credential') return 'Correo o contraseña incorrectos.';
   if (code === 'auth/invalid-email') return 'El correo no es valido.';
   if (code === 'auth/weak-password') return 'Usa una contraseña mas segura.';
-  if (code === 'permission-denied') return 'Firebase rechazo la operacion. Revisa las reglas publicadas.';
+  if (code === 'auth/invalid-api-key') {
+    return 'Este build no tiene la configuracion de Firebase. Hay que generar un APK nuevo.';
+  }
   return err instanceof Error ? err.message : 'No se pudo completar la operacion.';
 }
 
@@ -66,7 +68,13 @@ export default function App() {
   const [authNotice, setAuthNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    initFirebase();
+    try {
+      initFirebase();
+    } catch (err) {
+      setAuthError(describeAuthError(err));
+      setLoading(false);
+      return;
+    }
     return subscribeToAuthState((user) => {
       void (async () => {
         try {

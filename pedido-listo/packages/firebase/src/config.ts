@@ -3,20 +3,35 @@ import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
+/**
+ * Metro (EAS/Android) solo incrusta EXPO_PUBLIC_* si se lee `process.env.NOMBRE`
+ * con el nombre literal. `process.env[key]` queda vacio en el APK y Firebase
+ * truena con auth/invalid-api-key.
+ * Vite sigue usando import.meta.env.VITE_* para el catalogo web.
+ */
+function expoPublicEnv(key: string): string {
+  const values: Record<string, string | undefined> = {
+    EXPO_PUBLIC_FIREBASE_API_KEY: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+    EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    EXPO_PUBLIC_FIREBASE_PROJECT_ID: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+    EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    EXPO_PUBLIC_FIREBASE_APP_ID: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  };
+  return values[key] ?? '';
+}
+
 function getEnv(key: string): string {
+  const fromExpo = expoPublicEnv(key);
+  if (fromExpo) return fromExpo;
+
   try {
     // Vite reemplaza `import.meta.env` solo cuando se lee en esta misma expresion.
-    // Guardar `import.meta` en una variable deja el build sin configuracion.
     const env = (import.meta as unknown as { env?: Record<string, string> }).env;
-    if (env) {
-      return env[key] ?? '';
-    }
+    const value = env?.[key];
+    if (value) return value;
   } catch {
     // not in Vite context
-  }
-  if (typeof globalThis !== 'undefined' && 'process' in globalThis) {
-    const env = (globalThis as { process?: { env?: Record<string, string> } }).process?.env;
-    return env?.[key] ?? '';
   }
   return '';
 }
