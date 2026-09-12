@@ -5,9 +5,11 @@ import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 function getEnv(key: string): string {
   try {
-    const meta = import.meta as unknown as { env?: Record<string, string> };
-    if (typeof import.meta !== 'undefined' && meta.env) {
-      return meta.env[key] ?? '';
+    // Vite reemplaza `import.meta.env` solo cuando se lee en esta misma expresion.
+    // Guardar `import.meta` en una variable deja el build sin configuracion.
+    const env = (import.meta as unknown as { env?: Record<string, string> }).env;
+    if (env) {
+      return env[key] ?? '';
     }
   } catch {
     // not in Vite context
