@@ -70,6 +70,55 @@ export async function getBusinessById(businessId: string): Promise<Business | nu
   return mapBusiness(snap.id, snap.data());
 }
 
+export async function getBusinessByOwnerId(ownerId: string): Promise<Business | null> {
+  const db = getDb();
+  const q = query(collection(db, 'businesses'), where('ownerId', '==', ownerId));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const business = snap.docs[0];
+  return mapBusiness(business.id, business.data());
+}
+
+export interface CreateBusinessInput {
+  name: string;
+  slug: string;
+  whatsapp: string;
+  address?: string;
+  closeTime?: string;
+}
+
+export async function createOwnerBusiness(
+  ownerId: string,
+  input: CreateBusinessInput
+): Promise<Business> {
+  const existing = await getBusinessBySlug(input.slug);
+  if (existing) throw new Error('Ese link de catalogo ya esta en uso.');
+
+  const db = getDb();
+  const businessRef = doc(collection(db, 'businesses'));
+  await setDoc(businessRef, {
+    ownerId,
+    name: input.name,
+    slug: input.slug,
+    whatsapp: input.whatsapp,
+    address: input.address ?? null,
+    deliveryFee: 0,
+    minOrder: 0,
+    closeTime: input.closeTime ?? '20:00',
+    isOpen: true,
+    plan: 'free',
+    createdAt: serverTimestamp(),
+  });
+  await setDoc(doc(db, 'businesses', businessRef.id, 'categories', 'general'), {
+    name: 'General',
+    order: 0,
+  });
+
+  const created = await getBusinessById(businessRef.id);
+  if (!created) throw new Error('No se pudo crear el negocio.');
+  return created;
+}
+
 export async function getCategories(businessId: string): Promise<Category[]> {
   const db = getDb();
   const q = query(

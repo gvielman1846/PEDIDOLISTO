@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { STAFF_ROLE_LABELS, type StaffRole } from '@pedido-listo/types';
 import { colors } from '../theme';
 
 interface KitchenData {
@@ -11,10 +12,14 @@ interface KitchenData {
 interface Props {
   kitchen: KitchenData;
   productCount: number;
+  role: StaffRole;
   onNavigate: (screen: string) => void;
 }
 
-export function HomeScreen({ kitchen, productCount, onNavigate }: Props) {
+export function HomeScreen({ kitchen, productCount, role, onNavigate }: Props) {
+  const canManageMenu = role === 'owner' || role === 'kitchen';
+  const canShare = role === 'owner';
+  const canInvite = role === 'owner';
   return (
     <View style={styles.container}>
       <View style={styles.hero}>
@@ -22,7 +27,9 @@ export function HomeScreen({ kitchen, productCount, onNavigate }: Props) {
         <Text style={styles.title}>{kitchen.name}</Text>
         <Text style={styles.subtitle}>{kitchen.neighborhood || 'Sin zona definida'}</Text>
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>Cierra {kitchen.closeTime}</Text>
+          <Text style={styles.badgeText}>
+            {STAFF_ROLE_LABELS[role]} · Cierra {kitchen.closeTime}
+          </Text>
         </View>
       </View>
 
@@ -41,25 +48,51 @@ export function HomeScreen({ kitchen, productCount, onNavigate }: Props) {
         <Text style={styles.actionEmoji}>🛒</Text>
         <View>
           <Text style={styles.actionTitle}>Ver pedidos</Text>
-          <Text style={styles.actionDesc}>Lista en tiempo real para preparar</Text>
+          <Text style={styles.actionDesc}>
+            {role === 'delivery' ? 'Direccion, mapa y marcar entregado' : 'Lista en tiempo real para preparar'}
+          </Text>
         </View>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.action} onPress={() => onNavigate('menu')}>
-        <Text style={styles.actionEmoji}>📋</Text>
+      <TouchableOpacity style={styles.action} onPress={() => onNavigate('calendar')}>
+        <Text style={styles.actionEmoji}>📅</Text>
         <View>
-          <Text style={styles.actionTitle}>Gestionar menú</Text>
-          <Text style={styles.actionDesc}>Agregar platillos, marcar agotados</Text>
+          <Text style={styles.actionTitle}>Calendario</Text>
+          <Text style={styles.actionDesc}>Pedidos de dias anteriores</Text>
         </View>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.action} onPress={() => onNavigate('share')}>
-        <Text style={styles.actionEmoji}>🔗</Text>
-        <View>
-          <Text style={styles.actionTitle}>Compartir catálogo</Text>
-          <Text style={styles.actionDesc}>Link, QR e Instagram</Text>
-        </View>
-      </TouchableOpacity>
+      {canManageMenu && (
+        <TouchableOpacity style={styles.action} onPress={() => onNavigate('menu')}>
+          <Text style={styles.actionEmoji}>📋</Text>
+          <View>
+            <Text style={styles.actionTitle}>Gestionar menú</Text>
+            <Text style={styles.actionDesc}>
+              {role === 'kitchen' ? 'Marcar platillos agotados' : 'Agregar platillos, marcar agotados'}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )}
+
+      {canShare && (
+        <TouchableOpacity style={styles.action} onPress={() => onNavigate('share')}>
+          <Text style={styles.actionEmoji}>🔗</Text>
+          <View>
+            <Text style={styles.actionTitle}>Compartir catálogo</Text>
+            <Text style={styles.actionDesc}>Link, QR e Instagram</Text>
+          </View>
+        </TouchableOpacity>
+      )}
+
+      {canInvite && (
+        <TouchableOpacity style={styles.action} onPress={() => onNavigate('team')}>
+          <Text style={styles.actionEmoji}>👥</Text>
+          <View>
+            <Text style={styles.actionTitle}>Equipo</Text>
+            <Text style={styles.actionDesc}>Invitar cocina y entrega</Text>
+          </View>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

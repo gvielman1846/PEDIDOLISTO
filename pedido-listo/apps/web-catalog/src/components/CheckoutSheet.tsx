@@ -30,6 +30,20 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
 
   const { deliveryFee, total } = calculateOrderTotal(items, business, deliveryType);
 
+  /**
+   * En el celular abrir WhatsApp descarga esta pagina, asi que el pedido se guarda
+   * ANTES de salir o la escritura se cancela a medias. El limite de tiempo evita
+   * dejar al cliente esperando cuando la red esta lenta.
+   */
+  async function saveOrder(checkout: CheckoutData): Promise<void> {
+    if (!isFirebaseConfigured() || !business.id) return;
+    const timeout = new Promise<void>((resolve) => window.setTimeout(resolve, 8000));
+    await Promise.race([
+      createOrder(business.id, { items, subtotal, deliveryFee, total, checkout }),
+      timeout,
+    ]);
+  }
+
   function handleSend() {
     if (subtotal < business.minOrder) {
       alert(`Pedido mínimo: ${formatMXN(business.minOrder)}`);
@@ -65,27 +79,24 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
     const url = buildWhatsAppUrl(business.whatsapp, message);
 
     setWhatsAppUrl(url);
-    openWhatsApp(url);
-
     setSending(true);
     void (async () => {
+      let saveFailed = false;
       try {
-        if (isFirebaseConfigured() && business.id) {
-          await createOrder(business.id, {
-            items,
-            subtotal,
-            deliveryFee,
-            total,
-            checkout,
-          });
-        }
-        onClose();
+        await saveOrder(checkout);
       } catch (error) {
         console.error(error);
-        alert('WhatsApp deberia haberse abierto. Si no, usa el enlace de abajo. El pedido no se guardo en el sistema.');
+        saveFailed = true;
       } finally {
         setSending(false);
       }
+
+      openWhatsApp(url);
+      if (saveFailed) {
+        alert('Tu pedido se envia por WhatsApp, pero no se registro en la cocina. Confirmalo con el negocio.');
+        return;
+      }
+      onClose();
     })();
   }
 

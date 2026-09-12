@@ -2,9 +2,6 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Leer un campo inexistente aborta la evaluacion de la regla, asi que ownerId
-    // siempre se lee con esta funcion. Devuelve null cuando el negocio no tiene
-    // dueno, ya sea porque el campo no existe, es null o quedo como texto vacio.
     function ownerOf(businessId) {
       let data = get(/databases/$(database)/documents/businesses/$(businessId)).data;
       return 'ownerId' in data && data.ownerId != '' ? data.ownerId : null;
@@ -12,6 +9,21 @@ service cloud.firestore {
 
     function isOwner(businessId) {
       return request.auth != null && ownerOf(businessId) == request.auth.uid;
+    }
+
+    function isMember(businessId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/businesses/$(businessId)/members/$(request.auth.uid));
+    }
+
+    function memberRole(businessId) {
+      return isMember(businessId)
+        ? get(/databases/$(database)/documents/businesses/$(businessId)/members/$(request.auth.uid)).data.role
+        : null;
+    }
+
+    function isStaff(businessId) {
+      return isOwner(businessId) || isMember(businessId);
     }
 
     function isUnownedBusiness(businessId) {
@@ -34,6 +46,16 @@ service cloud.firestore {
       return request.auth != null && isUnownedBusiness(businessId);
     }
 
+    function pendingInvite(inviteId, businessId, role) {
+      return request.auth != null
+        && inviteId is string
+        && exists(/databases/$(database)/documents/invites/$(inviteId))
+        && get(/databases/$(database)/documents/invites/$(inviteId)).data.status == 'pending'
+        && get(/databases/$(database)/documents/invites/$(inviteId)).data.email == request.auth.token.email
+        && get(/databases/$(database)/documents/invites/$(inviteId)).data.businessId == businessId
+        && get(/databases/$(database)/documents/invites/$(inviteId)).data.role == role;
+    }
+
     match /businesses/{businessId} {
       allow read: if true;
       allow create: if request.auth != null;
@@ -47,15 +69,67 @@ service cloud.firestore {
 
       match /products/{productId} {
         allow read: if true;
-        allow write: if isOwner(businessId) || canSeedUnownedMenu(businessId);
+        allow create, delete: if isOwner(businessId) || canSeedUnownedMenu(businessId);
+        allow update: if isOwner(businessId)
+          || canSeedUnownedMenu(businessId)
+          || (
+            memberRole(businessId) == 'kitchen'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['available'])
+          );
       }
 
       match /orders/{orderId} {
-        allow read: if isOwner(businessId);
+        allow read: if isStaff(businessId);
         allow create: if true;
-        allow update: if isOwner(businessId);
+        allow update: if isStaff(businessId);
         allow delete: if isOwner(businessId);
       }
+
+      match /members/{memberId} {
+        allow read: if isStaff(businessId);
+        allow create: if isOwner(businessId)
+          || (
+            request.auth != null
+            && request.auth.uid == memberId
+            && request.resource.data.role in ['kitchen', 'delivery']
+            && pendingInvite(request.resource.data.inviteId, businessId, request.resource.data.role)
+          );
+        allow update: if isOwner(businessId);
+        allow delete: if isOwner(businessId) || request.auth.uid == memberId;
+      }
+    }
+
+    match /invites/{inviteId} {
+      allow read: if request.auth != null && (
+        isOwner(resource.data.businessId)
+        || request.auth.token.email == resource.data.email
+      );
+      allow create: if isOwner(request.resource.data.businessId)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.role in ['kitchen', 'delivery'];
+      allow update: if isOwner(resource.data.businessId)
+        || (
+          request.auth.token.email == resource.data.email
+          && resource.data.status == 'pending'
+          && request.resource.data.status == 'accepted'
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.businessId == resource.data.businessId
+          && request.resource.data.email == resource.data.email
+          && request.resource.data.role == resource.data.role
+        );
+      allow delete: if isOwner(resource.data.businessId);
+    }
+
+    match /memberships/{uid} {
+      allow read: if request.auth.uid == uid || isOwner(resource.data.businessId);
+      allow create: if request.auth.uid == uid && (
+        (request.resource.data.role == 'owner' && isOwner(request.resource.data.businessId))
+        || (
+          request.resource.data.role in ['kitchen', 'delivery']
+          && pendingInvite(request.resource.data.inviteId, request.resource.data.businessId, request.resource.data.role)
+        )
+      );
+      allow delete: if request.auth.uid == uid || isOwner(resource.data.businessId);
     }
   }
 }

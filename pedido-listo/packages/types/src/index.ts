@@ -1,5 +1,31 @@
 export type Plan = 'free' | 'pro';
 
+export type StaffRole = 'owner' | 'kitchen' | 'delivery';
+
+export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
+  owner: 'Dueno',
+  kitchen: 'Cocina',
+  delivery: 'Entrega',
+};
+
+export interface TeamMember {
+  id: string;
+  email: string;
+  role: StaffRole;
+  createdAt?: Date;
+}
+
+export interface TeamInvite {
+  id: string;
+  businessId: string;
+  email: string;
+  role: Exclude<StaffRole, 'owner'>;
+  status: 'pending' | 'accepted';
+  invitedBy: string;
+  uid?: string;
+  createdAt?: Date;
+}
+
 export interface Business {
   id?: string;
   name: string;

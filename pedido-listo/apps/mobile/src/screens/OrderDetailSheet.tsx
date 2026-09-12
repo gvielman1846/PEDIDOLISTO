@@ -8,7 +8,7 @@ import {
   ScrollView,
   Pressable,
 } from 'react-native';
-import type { Order } from '@pedido-listo/types';
+import type { Order, StaffRole } from '@pedido-listo/types';
 import { updateOrderStatus } from '@pedido-listo/firebase';
 import { openInGoogleMaps, openInWaze } from '../lib/maps';
 import { callCustomer, formatCustomerPhone, whatsappCustomer } from '../lib/contact';
@@ -16,7 +16,7 @@ import {
   formatMXN,
   formatTime,
   getDeliveryLabel,
-  getNextStatus,
+  getNextStatusForRole,
   getStatusColor,
   ORDER_STATUS_LABELS,
 } from '../lib/orders';
@@ -25,15 +25,16 @@ import { colors } from '../theme';
 interface Props {
   order: Order | null;
   businessId: string;
+  role: StaffRole;
   onClose: () => void;
 }
 
-export function OrderDetailSheet({ order, businessId, onClose }: Props) {
+export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
   const [updating, setUpdating] = useState(false);
 
   if (!order) return null;
 
-  const nextStatus = getNextStatus(order.status);
+  const nextStatus = getNextStatusForRole(order.status, role);
 
   async function handleAdvanceStatus() {
     if (!order || !nextStatus) return;

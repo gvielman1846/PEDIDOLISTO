@@ -25,6 +25,7 @@ interface Props {
   onAddProduct: (draft: NewProductDraft) => Promise<string | null>;
   onEditProduct: (productId: string, draft: NewProductDraft) => Promise<string | null>;
   onRemoveProduct: (productId: string) => Promise<void>;
+  canEditMenu: boolean;
 }
 
 export function MenuScreen({
@@ -36,6 +37,7 @@ export function MenuScreen({
   onAddProduct,
   onEditProduct,
   onRemoveProduct,
+  canEditMenu,
 }: Props) {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -73,7 +75,9 @@ export function MenuScreen({
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Menú del día</Text>
-      <Text style={styles.subtitle}>Marca platillos agotados o eliminalos del menu</Text>
+      <Text style={styles.subtitle}>
+        {canEditMenu ? 'Marca platillos agotados o eliminalos del menu' : 'Marca platillos agotados con un tap'}
+      </Text>
 
       {error && <Text style={styles.error}>{error}</Text>}
 
@@ -115,27 +119,33 @@ export function MenuScreen({
                   thumbColor={item.available ? colors.success : colors.danger}
                 />
               </View>
-              <TouchableOpacity
-                style={styles.deleteBtn}
-                onPress={() => setEditing(item)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text style={styles.editText}>Editar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.deleteBtn}
-                onPress={() => confirmDelete(item)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text style={styles.deleteText}>Eliminar</Text>
-              </TouchableOpacity>
+              {canEditMenu && (
+                <>
+                  <TouchableOpacity
+                    style={styles.deleteBtn}
+                    onPress={() => setEditing(item)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.editText}>Editar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.deleteBtn}
+                    onPress={() => confirmDelete(item)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.deleteText}>Eliminar</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           </View>
         )}
         ListFooterComponent={
-          <TouchableOpacity style={styles.addBtn} onPress={() => setAdding(true)}>
-            <Text style={styles.addBtnText}>+ Agregar platillo</Text>
-          </TouchableOpacity>
+          canEditMenu ? (
+            <TouchableOpacity style={styles.addBtn} onPress={() => setAdding(true)}>
+              <Text style={styles.addBtnText}>+ Agregar platillo</Text>
+            </TouchableOpacity>
+          ) : null
         }
       />
 
