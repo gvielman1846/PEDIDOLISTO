@@ -1,6 +1,7 @@
 export {
   getFirebaseApp,
   getDb,
+  setFirebaseDb,
   getFirebaseAuth,
   setFirebaseAuth,
   getFirebaseStorage,

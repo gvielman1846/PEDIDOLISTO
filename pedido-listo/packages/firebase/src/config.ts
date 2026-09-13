@@ -59,6 +59,14 @@ export function getFirebaseApp(): FirebaseApp {
   return app;
 }
 
+/**
+ * React Native necesita su propia instancia de Firestore con long polling; la
+ * app movil la registra aqui antes de la primera consulta.
+ */
+export function setFirebaseDb(instance: Firestore): void {
+  db = instance;
+}
+
 export function getDb(): Firestore {
   if (!db) db = getFirestore(getFirebaseApp());
   return db;

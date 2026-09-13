@@ -22,6 +22,29 @@ export interface NewProductDraft {
   imageMimeType?: string;
 }
 
+/**
+ * Firestore guarda la escritura en el telefono y la reintenta sola, pero la
+ * promesa solo responde cuando el servidor confirma. Sin este limite de tiempo
+ * una red mala deja el boton en "Guardando..." para siempre.
+ */
+async function withPendingFallback(write: Promise<unknown>, pending: string): Promise<string | null> {
+  const result = write.then(() => null);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  const timeout = new Promise<string>((resolve) => {
+    timer = setTimeout(() => {
+      result.catch(() => {});
+      resolve(pending);
+    }, 8000);
+  });
+
+  try {
+    return await Promise.race([result, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export function useProducts(businessId: string) {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -97,17 +120,20 @@ export function useProducts(businessId: string) {
         }
       }
 
-      await createProduct(businessId, productId, {
-        name: draft.name,
-        description: draft.description,
-        price: draft.price,
-        categoryId: draft.categoryId,
-        emoji: draft.emoji,
-        imageUrl,
-        order: products.length,
-      });
+      const pending = await withPendingFallback(
+        createProduct(businessId, productId, {
+          name: draft.name,
+          description: draft.description,
+          price: draft.price,
+          categoryId: draft.categoryId,
+          emoji: draft.emoji,
+          imageUrl,
+          order: products.length,
+        }),
+        'El platillo ya aparece en tu menu, pero la red esta lenta: se terminara de subir solo.'
+      );
 
-      return photoWarning;
+      return [photoWarning, pending].filter(Boolean).join(' ') || null;
     },
     [businessId, products.length]
   );
@@ -133,16 +159,19 @@ export function useProducts(businessId: string) {
         }
       }
 
-      await updateProduct(businessId, productId, {
-        name: draft.name,
-        description: draft.description,
-        price: draft.price,
-        categoryId: draft.categoryId,
-        emoji: draft.emoji,
-        imageUrl,
-      });
+      const pending = await withPendingFallback(
+        updateProduct(businessId, productId, {
+          name: draft.name,
+          description: draft.description,
+          price: draft.price,
+          categoryId: draft.categoryId,
+          emoji: draft.emoji,
+          imageUrl,
+        }),
+        'Los cambios ya se ven en tu menu, pero la red esta lenta: se terminaran de subir solos.'
+      );
 
-      return photoWarning;
+      return [photoWarning, pending].filter(Boolean).join(' ') || null;
     },
     [businessId]
   );
