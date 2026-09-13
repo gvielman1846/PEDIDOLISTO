@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   ScrollView,
   Pressable,
+  useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Order, StaffRole } from '@pedido-listo/types';
 import { updateOrderStatus } from '@pedido-listo/firebase';
 import { openInGoogleMaps, openInWaze } from '../lib/maps';
@@ -22,6 +24,10 @@ import {
 } from '../lib/orders';
 import { colors } from '../theme';
 
+// Alto del asa, los dos botones y los margenes de la hoja. Lo que sobra del
+// 88% de la pantalla es el espacio real que le toca a la lista.
+const SHEET_CHROME = 200;
+
 interface Props {
   order: Order | null;
   businessId: string;
@@ -31,6 +37,8 @@ interface Props {
 
 export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
   const [updating, setUpdating] = useState(false);
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
 
   if (!order) return null;
 
@@ -51,10 +59,15 @@ export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
 
   return (
     <Modal visible animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+      <View style={styles.overlay}>
+        {/* El fondo va aparte: si la hoja es un Pressable se queda con el
+            gesto y la lista de adentro nunca alcanza a desplazarse. */}
+        <Pressable style={styles.backdrop} onPress={onClose} />
+        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
           <View style={styles.handle} />
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={{ maxHeight: height * 0.88 - insets.bottom - SHEET_CHROME }}
+            showsVerticalScrollIndicator>
             <View style={styles.header}>
               <View>
                 <Text style={styles.title}>{order.customerName}</Text>
@@ -153,8 +166,8 @@ export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
             <Text style={styles.closeText}>Cerrar</Text>
           </TouchableOpacity>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -162,8 +175,15 @@ export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
+  },
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.45)',
   },
   sheet: {
     backgroundColor: colors.surface,

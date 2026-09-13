@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import {
+  SafeAreaProvider,
+  SafeAreaView,
+  initialWindowMetrics,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import type { Business, StaffRole } from '@pedido-listo/types';
 import {
   createOwnerBusiness,
@@ -60,6 +66,14 @@ function kitchenFromAccess(business: Business, role: StaffRole): KitchenData {
 }
 
 export default function App() {
+  return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <AppContent />
+    </SafeAreaProvider>
+  );
+}
+
+function AppContent() {
   const [kitchen, setKitchen] = useState<KitchenData | null>(null);
   const [legacyBusiness, setLegacyBusiness] = useState<Business | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
@@ -229,13 +243,16 @@ export default function App() {
 
 function KitchenTabs({ kitchen, onSignOut }: { kitchen: KitchenData; onSignOut: () => void }) {
   const [tab, setTab] = useState<Tab>('orders');
+  const insets = useSafeAreaInsets();
   const { products, categories, loading, error, toggleAvailable, addProduct, editProduct, removeProduct } =
     useProducts(kitchen.businessId);
 
+  // Con el dueño son seis pestañas, asi que cada etiqueta solo tiene un sexto
+  // del ancho: los nombres largos no caben ni en pantallas chicas.
   const tabs: Array<[Tab, string, string]> = [
     ['home', '🏠', 'Inicio'],
     ['orders', '🛒', 'Pedidos'],
-    ['calendar', '📅', 'Calendario'],
+    ['calendar', '📅', 'Agenda'],
   ];
   if (kitchen.role !== 'delivery') tabs.push(['menu', '📋', 'Menu']);
   if (kitchen.role === 'owner') {
@@ -244,7 +261,9 @@ function KitchenTabs({ kitchen, onSignOut }: { kitchen: KitchenData; onSignOut: 
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    // La barra de navegacion de Android se dibuja encima, asi que el borde inferior
+    // lo compensa la barra de pestañas con su propio inset.
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.content}>
         {tab === 'home' && (
           <>
@@ -278,11 +297,17 @@ function KitchenTabs({ kitchen, onSignOut }: { kitchen: KitchenData; onSignOut: 
         {tab === 'team' && kitchen.role === 'owner' && <TeamScreen businessId={kitchen.businessId} />}
       </View>
 
-      <View style={styles.tabs}>
+      <View style={[styles.tabs, { paddingBottom: insets.bottom + 10 }]}>
         {tabs.map(([id, icon, label]) => (
           <TouchableOpacity key={id} style={styles.tab} onPress={() => setTab(id)}>
             <Text style={styles.tabIcon}>{icon}</Text>
-            <Text style={[styles.tabLabel, tab === id && styles.tabLabelActive]}>{label}</Text>
+            <Text
+              style={[styles.tabLabel, tab === id && styles.tabLabelActive]}
+              numberOfLines={1}
+              allowFontScaling={false}
+            >
+              {label}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -300,11 +325,18 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.surface,
-    paddingBottom: 8,
+    paddingTop: 6,
   },
-  tab: { flex: 1, alignItems: 'center', paddingVertical: 8 },
-  tabIcon: { fontSize: 18 },
-  tabLabel: { fontSize: 10, color: colors.muted, fontWeight: '600', marginTop: 2 },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 2,
+    minHeight: 56,
+  },
+  tabIcon: { fontSize: 22 },
+  tabLabel: { fontSize: 10, color: colors.muted, fontWeight: '600', marginTop: 3 },
   tabLabelActive: { color: colors.accent },
   signOut: { position: 'absolute', top: 12, right: 20, padding: 8 },
   signOutText: { color: 'white', fontSize: 12, fontWeight: '700' },

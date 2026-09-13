@@ -70,12 +70,15 @@ export function dayKey(value?: Date): string {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
+const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+/**
+ * Etiqueta fija en vez de toLocaleDateString: en Android el largo que devuelve
+ * Intl varia y desacomoda el chip del calendario.
+ */
 export function formatDayLabel(value: Date): string {
-  return value.toLocaleDateString('es-MX', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
+  return `${WEEKDAYS[value.getDay()]} ${value.getDate()} ${MONTHS[value.getMonth()]}`;
 }
 
 export { ORDER_STATUS_LABELS };

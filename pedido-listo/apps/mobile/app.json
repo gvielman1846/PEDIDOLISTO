@@ -22,7 +22,10 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -40,6 +43,12 @@
       "eas": {
         "projectId": "63d13b16-4248-4fcc-84d6-ad57ff2bf498"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/63d13b16-4248-4fcc-84d6-ad57ff2bf498"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

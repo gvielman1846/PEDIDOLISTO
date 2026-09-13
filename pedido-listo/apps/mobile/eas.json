@@ -10,14 +10,16 @@
       "node": "22.13.0",
       "android": {
         "buildType": "apk"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
       "environment": "production",
       "node": "22.13.0",
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "channel": "production"
     }
   }
 }

@@ -11,7 +11,9 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import type { Category, Product } from '@pedido-listo/types';
@@ -20,6 +22,9 @@ import { resolveProductImageUrl } from '../lib/catalog';
 import { colors } from '../theme';
 
 const FALLBACK_CATEGORY = 'general';
+
+// Alto del asa, los dos botones y los margenes de la hoja.
+const SHEET_CHROME = 200;
 
 interface Props {
   visible: boolean;
@@ -39,6 +44,8 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
 
   function reset() {
     setName('');
@@ -144,10 +151,15 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <Pressable style={styles.overlay} onPress={handleClose}>
-          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        <View style={styles.overlay}>
+          {/* El fondo va aparte para no robarle el gesto al formulario. */}
+          <Pressable style={styles.backdrop} onPress={handleClose} />
+          <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
             <View style={styles.handle} />
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={{ maxHeight: height * 0.92 - insets.bottom - SHEET_CHROME }}
+              showsVerticalScrollIndicator
+              keyboardShouldPersistTaps="handled">
               <Text style={styles.title}>{isEditing ? 'Editar platillo' : 'Nuevo platillo'}</Text>
 
               <Text style={styles.label}>Nombre</Text>
@@ -240,8 +252,8 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
             <TouchableOpacity style={styles.closeBtn} onPress={handleClose}>
               <Text style={styles.closeText}>Cancelar</Text>
             </TouchableOpacity>
-          </Pressable>
-        </Pressable>
+          </View>
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -249,9 +261,16 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
   },
   sheet: {

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { STAFF_ROLE_LABELS, type StaffRole } from '@pedido-listo/types';
 import { colors } from '../theme';
 
@@ -21,7 +21,7 @@ export function HomeScreen({ kitchen, productCount, role, onNavigate }: Props) {
   const canShare = role === 'owner';
   const canInvite = role === 'owner';
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.hero}>
         <Text style={styles.emoji}>🍲</Text>
         <Text style={styles.title}>{kitchen.name}</Text>
@@ -93,12 +93,13 @@ export function HomeScreen({ kitchen, productCount, role, onNavigate }: Props) {
           </View>
         </TouchableOpacity>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg, padding: 20 },
+  container: { flex: 1, backgroundColor: colors.bg },
+  content: { padding: 20, paddingBottom: 32 },
   hero: {
     backgroundColor: colors.accent,
     borderRadius: 20,

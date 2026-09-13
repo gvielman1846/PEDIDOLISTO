@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme';
 
 export interface SignUpData {
@@ -44,6 +45,7 @@ export function AuthScreen({
   const [mode, setMode] = useState<'signin' | 'signup'>(
     legacyBusinessName ? 'signup' : 'signin'
   );
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -70,7 +72,13 @@ export function AuthScreen({
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 48 },
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.emoji}>🍲</Text>
         <Text style={styles.title}>
           {pendingEmail
@@ -208,7 +216,7 @@ export function AuthScreen({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  scroll: { padding: 24, paddingTop: 48, paddingBottom: 48 },
+  scroll: { padding: 24 },
   emoji: { fontSize: 46, textAlign: 'center' },
   title: { fontSize: 24, fontWeight: '800', color: colors.text, textAlign: 'center', marginTop: 10 },
   subtitle: { fontSize: 14, color: colors.muted, textAlign: 'center', marginTop: 8, marginBottom: 22, lineHeight: 20 },

@@ -68,6 +68,7 @@ export function OrderList({
       <FlatList
         data={orders}
         keyExtractor={(item) => item.id!}
+        style={styles.listFlex}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -190,7 +191,10 @@ export function CalendarScreen({ businessId, role }: { businessId: string; role:
                   style={[styles.dayChip, active && styles.dayChipActive]}
                   onPress={() => setSelectedDay(item.key)}
                 >
-                  <Text style={[styles.dayChipText, active && styles.dayChipTextActive]}>
+                  <Text
+                    style={[styles.dayChipText, active && styles.dayChipTextActive]}
+                    numberOfLines={1}
+                  >
                     {formatDayLabel(item.date)}
                   </Text>
                   <Text style={[styles.dayChipCount, active && styles.dayChipTextActive]}>
@@ -212,7 +216,10 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: 14, color: colors.muted, marginBottom: 16 },
   error: { color: colors.danger, marginBottom: 12, fontSize: 13 },
-  list: { gap: 10, paddingBottom: 24 },
+  // Sin flex la lista crece con su contenido y se pasa de la pantalla, asi que
+  // el scroll se corta antes del ultimo pedido.
+  listFlex: { flex: 1 },
+  list: { gap: 10, paddingBottom: 24, flexGrow: 1 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 14,
@@ -240,12 +247,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    minWidth: 88,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    minWidth: 96,
   },
   dayChipActive: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
-  dayChipText: { fontSize: 13, fontWeight: '700', color: colors.text, textTransform: 'capitalize' },
+  // Sin textTransform: Android mide el texto original y lo deja fuera del chip.
+  dayChipText: { fontSize: 13, fontWeight: '700', color: colors.text },
   dayChipCount: { fontSize: 12, color: colors.muted, marginTop: 2 },
   dayChipTextActive: { color: colors.accentDark },
 });

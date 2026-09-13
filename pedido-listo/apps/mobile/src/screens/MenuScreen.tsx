@@ -91,6 +91,7 @@ export function MenuScreen({
       <FlatList
         data={products}
         keyExtractor={(item) => item.id!}
+        style={styles.listFlex}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -187,7 +188,8 @@ const styles = StyleSheet.create({
   emptyEmoji: { fontSize: 48 },
   emptyTitle: { fontSize: 18, fontWeight: '700', marginTop: 12, color: colors.text },
   emptyText: { fontSize: 14, color: colors.muted, textAlign: 'center', marginTop: 6, paddingHorizontal: 24 },
-  list: { gap: 10, paddingBottom: 24 },
+  listFlex: { flex: 1 },
+  list: { gap: 10, paddingBottom: 24, flexGrow: 1 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
