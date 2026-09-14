@@ -129,7 +129,16 @@ service cloud.firestore {
           && pendingInvite(request.resource.data.inviteId, request.resource.data.businessId, request.resource.data.role)
         )
       );
+      allow update: if request.auth.uid == uid
+        && (
+          isOwner(request.resource.data.businessId)
+          || isMember(request.resource.data.businessId)
+        );
       allow delete: if request.auth.uid == uid || isOwner(resource.data.businessId);
+    }
+
+    match /userProfiles/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
     }
   }
 }

@@ -18,6 +18,7 @@ import {
   signOutOwner,
   subscribeToAuthState,
   writeOwnerMembership,
+  type KitchenAccess,
 } from '@pedido-listo/firebase';
 import { AuthScreen, type SignUpData } from './src/screens/AuthScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -35,7 +36,8 @@ type Tab = 'home' | 'orders' | 'calendar' | 'menu' | 'share' | 'team';
 function describeAuthError(err: unknown): string {
   const code = (err as { code?: string })?.code;
   if (code === 'auth/email-already-in-use') return 'Ese correo ya tiene una cuenta. Usa Iniciar sesion o recupera tu contraseña.';
-  if (code === 'auth/invalid-credential') return 'Correo o contraseña incorrectos.';
+  if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') return 'Correo o contraseña incorrectos.';
+  if (code === 'auth/requires-recent-login') return 'Vuelve a escribir tu contraseña actual para hacer este cambio.';
   if (code === 'auth/invalid-email') return 'El correo no es valido.';
   if (code === 'auth/weak-password') return 'Usa una contraseña mas segura.';
   if (code === 'auth/user-not-found') return 'No hay una cuenta con ese correo.';
@@ -309,20 +311,26 @@ function AppContent() {
   return (
     <KitchenTabs
       kitchen={kitchen}
+      accountEmail={getFirebaseAuth().currentUser?.email ?? ''}
       onSignOut={handleSignOut}
       onKitchenChange={(patch) => setKitchen((current) => (current ? { ...current, ...patch } : current))}
+      onSelectKitchen={(access) => setKitchen(kitchenFromAccess(access.business, access.role))}
     />
   );
 }
 
 function KitchenTabs({
   kitchen,
+  accountEmail,
   onSignOut,
   onKitchenChange,
+  onSelectKitchen,
 }: {
   kitchen: KitchenData;
+  accountEmail: string;
   onSignOut: () => void;
   onKitchenChange: (patch: Partial<KitchenData>) => void;
+  onSelectKitchen: (access: KitchenAccess) => void;
 }) {
   const [tab, setTab] = useState<Tab>('orders');
   const insets = useSafeAreaInsets();
@@ -350,8 +358,8 @@ function KitchenTabs({
   if (kitchen.role !== 'delivery') tabs.push(['menu', '📋', 'Productos']);
   if (kitchen.role === 'owner') {
     tabs.push(['team', '👥', 'Equipo']);
-    tabs.push(['share', '🔗', 'Perfil']);
   }
+  tabs.push(['share', '🔗', 'Perfil']);
 
   return (
     // La barra de navegacion de Android se dibuja encima, asi que el borde inferior
@@ -389,10 +397,12 @@ function KitchenTabs({
             canEditMenu={kitchen.role === 'owner'}
           />
         )}
-        {tab === 'share' && kitchen.role === 'owner' && (
+        {tab === 'share' && (
           <ShareScreen
             kitchen={kitchen}
+            accountEmail={accountEmail}
             onKitchenChange={onKitchenChange}
+            onSelectKitchen={onSelectKitchen}
           />
         )}
         {tab === 'team' && kitchen.role === 'owner' && <TeamScreen businessId={kitchen.businessId} />}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -14,36 +14,85 @@ import * as Clipboard from 'expo-clipboard';
 import {
   PAYMENT_METHOD_LABELS,
   PAYMENT_METHODS,
+  STAFF_ROLE_LABELS,
   enabledPaymentMethods,
   normalizeClabe,
   type PaymentMethod,
+  type StaffRole,
 } from '@pedido-listo/types';
-import { updateBusinessPaymentSettings } from '@pedido-listo/firebase';
-import { buildCatalogUrl } from '../lib/catalog';
+import {
+  changeAccountEmail,
+  changeAccountPassword,
+  createOwnerBusiness,
+  getFirebaseAuth,
+  getUserProfile,
+  listUserKitchens,
+  saveUserPhone,
+  setActiveKitchen,
+  updateBusinessPaymentSettings,
+  writeOwnerMembership,
+  type KitchenAccess,
+} from '@pedido-listo/firebase';
+import { buildCatalogUrl, slugify } from '../lib/catalog';
 import { colors } from '../theme';
 
 interface KitchenData {
   name: string;
   slug?: string;
   businessId: string;
+  role: StaffRole;
   paymentMethods?: PaymentMethod[];
   clabe?: string;
 }
 
 interface Props {
   kitchen: KitchenData;
+  accountEmail: string;
   onKitchenChange: (patch: Partial<KitchenData>) => void;
+  onSelectKitchen: (access: KitchenAccess) => void;
 }
 
-export function ShareScreen({ kitchen, onKitchenChange }: Props) {
+export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKitchen }: Props) {
+  const uid = getFirebaseAuth().currentUser?.uid;
   const slug = kitchen.slug ?? 'cocina-chef-cueto';
   const catalogUrl = buildCatalogUrl(slug);
+  const isOwner = kitchen.role === 'owner';
+
   const [methods, setMethods] = useState<PaymentMethod[]>(() =>
     enabledPaymentMethods(kitchen)
   );
   const [clabe, setClabe] = useState(kitchen.clabe ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const [kitchens, setKitchens] = useState<KitchenAccess[]>([]);
+  const [phone, setPhone] = useState('');
+  const [newEmail, setNewEmail] = useState(accountEmail);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [nextPassword, setNextPassword] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newSlug, setNewSlug] = useState('');
+  const [newWhatsapp, setNewWhatsapp] = useState('');
+  const [newAddress, setNewAddress] = useState('');
+
+  useEffect(() => {
+    setMethods(enabledPaymentMethods(kitchen));
+    setClabe(kitchen.clabe ?? '');
+  }, [kitchen.businessId, kitchen.clabe, kitchen.paymentMethods]);
+
+  useEffect(() => {
+    if (!uid) return;
+    void (async () => {
+      try {
+        const [profile, list] = await Promise.all([getUserProfile(uid), listUserKitchens(uid)]);
+        if (profile?.phone) setPhone(profile.phone);
+        setKitchens(list);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'No se pudieron cargar tus negocios.');
+      }
+    })();
+  }, [uid, kitchen.businessId]);
 
   async function copyLink() {
     await Clipboard.setStringAsync(catalogUrl);
@@ -86,72 +135,283 @@ export function ShareScreen({ kitchen, onKitchenChange }: Props) {
     }
   }
 
+  async function savePhone() {
+    if (!uid) return;
+    setSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await saveUserPhone(uid, phone);
+      setNotice('Celular guardado.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el celular.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveEmail() {
+    if (!newEmail.trim() || !currentPassword) {
+      setError('Escribe el nuevo correo y tu contraseña actual.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await changeAccountEmail(newEmail.trim(), currentPassword);
+      setCurrentPassword('');
+      setNotice(`Te enviamos un correo a ${newEmail.trim()} para confirmar el cambio.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo cambiar el correo.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function savePassword() {
+    if (!currentPassword || !nextPassword) {
+      setError('Escribe tu contraseña actual y la nueva.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await changeAccountPassword(currentPassword, nextPassword);
+      setCurrentPassword('');
+      setNextPassword('');
+      setNotice('Contraseña actualizada.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo cambiar la contraseña.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function switchKitchen(access: KitchenAccess) {
+    if (!uid || access.business.id === kitchen.businessId) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await setActiveKitchen(uid, accountEmail, access);
+      onSelectKitchen(access);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo cambiar de negocio.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function addKitchen() {
+    if (!uid) return;
+    if (!newName.trim() || !newSlug.trim() || !newWhatsapp.trim()) {
+      setError('Para un negocio nuevo llena nombre, link y WhatsApp.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const business = await createOwnerBusiness(uid, {
+        name: newName.trim(),
+        slug: slugify(newSlug),
+        whatsapp: newWhatsapp.trim(),
+        address: newAddress.trim() || undefined,
+      });
+      await writeOwnerMembership(business.id!, uid, accountEmail);
+      setNewName('');
+      setNewSlug('');
+      setNewWhatsapp('');
+      setNewAddress('');
+      onSelectKitchen({ business, role: 'owner' });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo crear el negocio.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Compartir catálogo</Text>
-      <Text style={styles.subtitle}>Tus clientes piden sin instalar app</Text>
+      <Text style={styles.title}>Perfil</Text>
+      <Text style={styles.subtitle}>Tu cuenta y los negocios de este correo</Text>
 
-      <View style={styles.qrPlaceholder}>
-        <Text style={styles.qrEmoji}>📱</Text>
-        <Text style={styles.qrText}>QR para mostrador</Text>
-        <Text style={styles.qrHint}>(expo-camera en semana 3)</Text>
-      </View>
-
-      <View style={styles.linkBox}>
-        <Text style={styles.linkLabel}>Tu link público</Text>
-        <Text style={styles.linkUrl} selectable>
-          {catalogUrl}
-        </Text>
-      </View>
-
-      <TouchableOpacity style={styles.btn} onPress={copyLink}>
-        <Text style={styles.btnText}>📋 Copiar link</Text>
+      <Text style={styles.section}>Cuenta</Text>
+      <Text style={styles.label}>Correo</Text>
+      <TextInput
+        style={styles.input}
+        value={newEmail}
+        onChangeText={setNewEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+      <Text style={styles.label}>Contraseña actual</Text>
+      <TextInput
+        style={styles.input}
+        value={currentPassword}
+        onChangeText={setCurrentPassword}
+        placeholder="La necesitas para cambiar correo o contraseña"
+        secureTextEntry
+        autoCapitalize="none"
+      />
+      <TouchableOpacity style={styles.btn} onPress={saveEmail} disabled={saving}>
+        <Text style={styles.btnText}>Cambiar correo</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.btnSecondary}>
-        <Text style={styles.btnSecondaryText}>📸 Compartir en Instagram</Text>
+      <Text style={styles.label}>Nueva contraseña</Text>
+      <TextInput
+        style={styles.input}
+        value={nextPassword}
+        onChangeText={setNextPassword}
+        placeholder="Minimo 8 caracteres"
+        secureTextEntry
+        autoCapitalize="none"
+      />
+      <TouchableOpacity style={styles.btn} onPress={savePassword} disabled={saving}>
+        <Text style={styles.btnText}>Cambiar contraseña</Text>
       </TouchableOpacity>
 
-      <Text style={styles.section}>Metodos de pago</Text>
+      <Text style={styles.label}>Numero de celular</Text>
+      <TextInput
+        style={styles.input}
+        value={phone}
+        onChangeText={setPhone}
+        placeholder="5512345678"
+        keyboardType="phone-pad"
+      />
+      <TouchableOpacity style={styles.btnSecondary} onPress={savePhone} disabled={saving}>
+        <Text style={styles.btnSecondaryText}>Guardar celular</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.section}>Negocios</Text>
       <Text style={styles.sectionHint}>
-        Solo los que actives aparecen al cliente. Si elige Transferencia, el WhatsApp lleva tu CLABE.
+        Un mismo correo puede tener varias cocinas. Toca la que quieres ver en la app.
       </Text>
+      {kitchens.map((access) => {
+        const active = access.business.id === kitchen.businessId;
+        return (
+          <TouchableOpacity
+            key={access.business.id}
+            style={[styles.kitchenRow, active && styles.kitchenRowActive]}
+            onPress={() => void switchKitchen(access)}
+            disabled={saving}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.kitchenName}>{access.business.name}</Text>
+              <Text style={styles.kitchenMeta}>{STAFF_ROLE_LABELS[access.role]}</Text>
+            </View>
+            <Text style={styles.kitchenPick}>{active ? 'Actual' : 'Cargar'}</Text>
+          </TouchableOpacity>
+        );
+      })}
 
-      {PAYMENT_METHODS.map((method) => (
-        <View key={method} style={styles.methodRow}>
-          <Text style={styles.methodLabel}>{PAYMENT_METHOD_LABELS[method]}</Text>
-          <Switch
-            value={methods.includes(method)}
-            onValueChange={(next) => toggleMethod(method, next)}
-            trackColor={{ false: '#fecaca', true: '#bbf7d0' }}
-            thumbColor={methods.includes(method) ? colors.success : colors.danger}
-          />
-        </View>
-      ))}
+      <Text style={styles.section}>Agregar negocio</Text>
+      <Text style={styles.label}>Nombre de la cocina</Text>
+      <TextInput
+        style={styles.input}
+        value={newName}
+        onChangeText={setNewName}
+        placeholder="Ej. Cocina del centro"
+      />
+      <Text style={styles.label}>Link del catalogo</Text>
+      <TextInput
+        style={styles.input}
+        value={newSlug}
+        onChangeText={setNewSlug}
+        placeholder="cocina-del-centro"
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+      <Text style={styles.label}>WhatsApp del negocio</Text>
+      <TextInput
+        style={styles.input}
+        value={newWhatsapp}
+        onChangeText={setNewWhatsapp}
+        placeholder="5512345678"
+        keyboardType="phone-pad"
+      />
+      <Text style={styles.label}>Colonia / direccion</Text>
+      <TextInput
+        style={styles.input}
+        value={newAddress}
+        onChangeText={setNewAddress}
+        placeholder="Alta California, Tlajomulco"
+      />
+      <TouchableOpacity style={styles.btn} onPress={() => void addKitchen()} disabled={saving}>
+        <Text style={styles.btnText}>Crear y cargar este negocio</Text>
+      </TouchableOpacity>
 
-      {methods.includes('transferencia') && (
+      {isOwner && (
         <>
-          <Text style={styles.label}>CLABE interbancaria</Text>
-          <TextInput
-            style={styles.input}
-            value={clabe}
-            onChangeText={(value) => setClabe(normalizeClabe(value))}
-            placeholder="18 digitos"
-            keyboardType="number-pad"
-            maxLength={18}
-          />
+          <Text style={styles.section}>Compartir catálogo</Text>
+          <Text style={styles.subtitle}>Tus clientes piden sin instalar app</Text>
+
+          <View style={styles.qrPlaceholder}>
+            <Text style={styles.qrEmoji}>📱</Text>
+            <Text style={styles.qrText}>QR para mostrador</Text>
+            <Text style={styles.qrHint}>(expo-camera en semana 3)</Text>
+          </View>
+
+          <View style={styles.linkBox}>
+            <Text style={styles.linkLabel}>Tu link público</Text>
+            <Text style={styles.linkUrl} selectable>
+              {catalogUrl}
+            </Text>
+          </View>
+
+          <TouchableOpacity style={styles.btn} onPress={copyLink}>
+            <Text style={styles.btnText}>📋 Copiar link</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.btnSecondary}>
+            <Text style={styles.btnSecondaryText}>📸 Compartir en Instagram</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.section}>Metodos de pago</Text>
+          <Text style={styles.sectionHint}>
+            Solo los que actives aparecen al cliente. Si elige Transferencia, el WhatsApp lleva tu CLABE.
+          </Text>
+
+          {PAYMENT_METHODS.map((method) => (
+            <View key={method} style={styles.methodRow}>
+              <Text style={styles.methodLabel}>{PAYMENT_METHOD_LABELS[method]}</Text>
+              <Switch
+                value={methods.includes(method)}
+                onValueChange={(next) => toggleMethod(method, next)}
+                trackColor={{ false: '#fecaca', true: '#bbf7d0' }}
+                thumbColor={methods.includes(method) ? colors.success : colors.danger}
+              />
+            </View>
+          ))}
+
+          {methods.includes('transferencia') && (
+            <>
+              <Text style={styles.label}>CLABE interbancaria</Text>
+              <TextInput
+                style={styles.input}
+                value={clabe}
+                onChangeText={(value) => setClabe(normalizeClabe(value))}
+                placeholder="18 digitos"
+                keyboardType="number-pad"
+                maxLength={18}
+              />
+            </>
+          )}
+
+          <TouchableOpacity style={styles.btn} onPress={savePayments} disabled={saving}>
+            {saving ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.btnText}>Guardar metodos de pago</Text>
+            )}
+          </TouchableOpacity>
         </>
       )}
 
       {error && <Text style={styles.error}>{error}</Text>}
-
-      <TouchableOpacity style={styles.btn} onPress={savePayments} disabled={saving}>
-        {saving ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text style={styles.btnText}>Guardar metodos de pago</Text>
-        )}
-      </TouchableOpacity>
+      {notice && <Text style={styles.notice}>{notice}</Text>}
 
       <Text style={styles.footer}>
         Plan Gratis incluye marca PedidoListo. Pro $99/mes para quitarla.
@@ -164,7 +424,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
   title: { fontSize: 22, fontWeight: '700', color: colors.text },
-  subtitle: { fontSize: 14, color: colors.muted, marginBottom: 20 },
+  subtitle: { fontSize: 14, color: colors.muted, marginBottom: 12 },
   qrPlaceholder: {
     backgroundColor: colors.surface,
     borderRadius: 20,
@@ -202,10 +462,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
+    marginBottom: 10,
   },
   btnSecondaryText: { color: colors.text, fontWeight: '700', fontSize: 16 },
   section: { fontSize: 18, fontWeight: '800', color: colors.text, marginTop: 28 },
   sectionHint: { fontSize: 13, color: colors.muted, marginTop: 4, marginBottom: 12, lineHeight: 18 },
+  kitchenRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  kitchenRowActive: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  kitchenName: { fontSize: 16, fontWeight: '700', color: colors.text },
+  kitchenMeta: { fontSize: 13, color: colors.muted, marginTop: 2 },
+  kitchenPick: { fontSize: 13, fontWeight: '800', color: colors.accentDark },
   methodRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -231,9 +507,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     marginBottom: 12,
-    letterSpacing: 1,
   },
-  error: { color: colors.danger, fontSize: 13, marginBottom: 10 },
+  error: { color: colors.danger, fontSize: 13, marginTop: 12 },
+  notice: { color: colors.accentDark, fontSize: 13, marginTop: 12 },
   footer: {
     fontSize: 12,
     color: colors.muted,

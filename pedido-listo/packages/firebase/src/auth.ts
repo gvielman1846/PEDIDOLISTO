@@ -3,10 +3,13 @@ import {
   createUserWithEmailAndPassword,
   linkWithCredential,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   sendPasswordResetEmail,
   signInAnonymously,
   signInWithEmailAndPassword,
   signOut,
+  updatePassword,
+  verifyBeforeUpdateEmail,
   type User,
   type Unsubscribe,
 } from 'firebase/auth';
@@ -47,6 +50,28 @@ export async function signInOwnerWithEmail(email: string, password: string): Pro
 
 export async function sendPasswordSetupEmail(email: string): Promise<void> {
   await sendPasswordResetEmail(getFirebaseAuth(), email.trim());
+}
+
+async function reauthenticate(password: string): Promise<User> {
+  const auth = getFirebaseAuth();
+  const user = auth.currentUser;
+  if (!user?.email) throw new Error('No autenticado');
+  const credential = EmailAuthProvider.credential(user.email, password);
+  const result = await reauthenticateWithCredential(user, credential);
+  return result.user;
+}
+
+export async function changeAccountEmail(newEmail: string, currentPassword: string): Promise<void> {
+  const user = await reauthenticate(currentPassword);
+  await verifyBeforeUpdateEmail(user, newEmail.trim());
+}
+
+export async function changeAccountPassword(currentPassword: string, nextPassword: string): Promise<void> {
+  if (nextPassword.trim().length < 8) {
+    throw new Error('La nueva contraseña debe tener al menos 8 caracteres.');
+  }
+  const user = await reauthenticate(currentPassword);
+  await updatePassword(user, nextPassword);
 }
 
 function randomPassword(): string {

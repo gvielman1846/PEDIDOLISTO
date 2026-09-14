@@ -82,13 +82,16 @@ export async function getBusinessById(businessId: string): Promise<Business | nu
   return mapBusiness(snap.id, snap.data());
 }
 
-export async function getBusinessByOwnerId(ownerId: string): Promise<Business | null> {
+export async function getBusinessesByOwnerId(ownerId: string): Promise<Business[]> {
   const db = getDb();
   const q = query(collection(db, 'businesses'), where('ownerId', '==', ownerId));
   const snap = await getDocs(q);
-  if (snap.empty) return null;
-  const business = snap.docs[0];
-  return mapBusiness(business.id, business.data());
+  return snap.docs.map((item) => mapBusiness(item.id, item.data()));
+}
+
+export async function getBusinessByOwnerId(ownerId: string): Promise<Business | null> {
+  const owned = await getBusinessesByOwnerId(ownerId);
+  return owned[0] ?? null;
 }
 
 export interface CreateBusinessInput {
