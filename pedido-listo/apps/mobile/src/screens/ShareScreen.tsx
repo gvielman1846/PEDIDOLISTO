@@ -136,7 +136,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
   }
 
   async function savePhone() {
-    if (!uid) return;
+    if (!uid || !isOwner) return;
     setSaving(true);
     setError(null);
     setNotice(null);
@@ -204,7 +204,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
   }
 
   async function addKitchen() {
-    if (!uid) return;
+    if (!uid || !isOwner) return;
     if (!newName.trim() || !newSlug.trim() || !newWhatsapp.trim()) {
       setError('Para un negocio nuevo llena nombre, link y WhatsApp.');
       return;
@@ -277,18 +277,22 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
         <Text style={styles.btnText}>Cambiar contraseña</Text>
       </TouchableOpacity>
 
-      <Text style={styles.label}>Numero de celular</Text>
-      <TextInput
-        style={styles.input}
-        value={phone}
-        onChangeText={setPhone}
-        placeholder="Ej. 3312345678"
-        placeholderTextColor={colors.muted}
-        keyboardType="phone-pad"
-      />
-      <TouchableOpacity style={styles.btnSecondary} onPress={savePhone} disabled={saving}>
-        <Text style={styles.btnSecondaryText}>Guardar celular</Text>
-      </TouchableOpacity>
+      {isOwner && (
+        <>
+          <Text style={styles.label}>Numero de celular</Text>
+          <TextInput
+            style={styles.input}
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="Ej. 3312345678"
+            placeholderTextColor={colors.muted}
+            keyboardType="phone-pad"
+          />
+          <TouchableOpacity style={styles.btnSecondary} onPress={savePhone} disabled={saving}>
+            <Text style={styles.btnSecondaryText}>Guardar celular</Text>
+          </TouchableOpacity>
+        </>
+      )}
 
       <Text style={styles.section}>Negocios</Text>
       <Text style={styles.sectionHint}>
@@ -312,45 +316,49 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
         );
       })}
 
-      <Text style={styles.section}>Agregar negocio</Text>
-      <Text style={styles.label}>Nombre del negocio</Text>
-      <TextInput
-        style={styles.input}
-        value={newName}
-        onChangeText={setNewName}
-        placeholder="Ej. Taqueria El Guero"
-        placeholderTextColor={colors.muted}
-      />
-      <Text style={styles.label}>Link del catalogo</Text>
-      <TextInput
-        style={styles.input}
-        value={newSlug}
-        onChangeText={setNewSlug}
-        placeholder="Ej. taqueria-el-guero"
-        placeholderTextColor={colors.muted}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      <Text style={styles.label}>WhatsApp del negocio</Text>
-      <TextInput
-        style={styles.input}
-        value={newWhatsapp}
-        onChangeText={setNewWhatsapp}
-        placeholder="Ej. 3312345678"
-        placeholderTextColor={colors.muted}
-        keyboardType="phone-pad"
-      />
-      <Text style={styles.label}>Colonia / direccion</Text>
-      <TextInput
-        style={styles.input}
-        value={newAddress}
-        onChangeText={setNewAddress}
-        placeholder="Ej. Alta California Residencial, Tlajomulco"
-        placeholderTextColor={colors.muted}
-      />
-      <TouchableOpacity style={styles.btn} onPress={() => void addKitchen()} disabled={saving}>
-        <Text style={styles.btnText}>Crear y cargar este negocio</Text>
-      </TouchableOpacity>
+      {isOwner && (
+        <>
+          <Text style={styles.section}>Agregar negocio</Text>
+          <Text style={styles.label}>Nombre del negocio</Text>
+          <TextInput
+            style={styles.input}
+            value={newName}
+            onChangeText={setNewName}
+            placeholder="Ej. Taqueria El Guero"
+            placeholderTextColor={colors.muted}
+          />
+          <Text style={styles.label}>Link del catalogo</Text>
+          <TextInput
+            style={styles.input}
+            value={newSlug}
+            onChangeText={setNewSlug}
+            placeholder="Ej. taqueria-el-guero"
+            placeholderTextColor={colors.muted}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <Text style={styles.label}>WhatsApp del negocio</Text>
+          <TextInput
+            style={styles.input}
+            value={newWhatsapp}
+            onChangeText={setNewWhatsapp}
+            placeholder="Ej. 3312345678"
+            placeholderTextColor={colors.muted}
+            keyboardType="phone-pad"
+          />
+          <Text style={styles.label}>Colonia / direccion</Text>
+          <TextInput
+            style={styles.input}
+            value={newAddress}
+            onChangeText={setNewAddress}
+            placeholder="Ej. Alta California Residencial, Tlajomulco"
+            placeholderTextColor={colors.muted}
+          />
+          <TouchableOpacity style={styles.btn} onPress={() => void addKitchen()} disabled={saving}>
+            <Text style={styles.btnText}>Crear y cargar este negocio</Text>
+          </TouchableOpacity>
+        </>
+      )}
 
       {isOwner && (
         <>
