@@ -89,7 +89,7 @@ export function CategorySheet({
   function confirmRemove(category: Category) {
     Alert.alert(
       'Eliminar categoria',
-      `¿Eliminar "${category.name}"? Solo se puede si no tiene platillos.`,
+      `¿Eliminar "${category.name}"? Solo se puede si no tiene productos.`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -113,7 +113,7 @@ export function CategorySheet({
         <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={close} />
         <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
           <View style={styles.handle} />
-          <Text style={styles.title}>Categorias del menu</Text>
+          <Text style={styles.title}>Categorias de productos</Text>
           <Text style={styles.subtitle}>
             Se muestran también en el catalogo de tus clientes.
           </Text>

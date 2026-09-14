@@ -82,7 +82,7 @@ export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
               </View>
             </View>
 
-            <Text style={styles.section}>Platillos</Text>
+            <Text style={styles.section}>Productos</Text>
             {order.items.map((item) => (
               <View key={item.productId} style={styles.line}>
                 <Text style={styles.lineQty}>{item.quantity}×</Text>
@@ -147,7 +147,7 @@ export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
 
             {order.note && (
               <>
-                <Text style={styles.section}>Nota para cocina</Text>
+                <Text style={styles.section}>Nota para el preparador</Text>
                 <Text style={styles.noteBox}>{order.note}</Text>
               </>
             )}

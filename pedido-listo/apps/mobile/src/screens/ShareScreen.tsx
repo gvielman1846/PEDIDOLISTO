@@ -299,7 +299,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
 
       <Text style={styles.section}>Negocios</Text>
       <Text style={styles.sectionHint}>
-        Un mismo correo puede tener varias cocinas. Toca la que quieres ver en la app.
+        Un mismo correo puede tener varios negocios. Toca el que quieres ver en la app.
       </Text>
       {kitchens.map((access) => {
         const active = access.business.id === kitchen.businessId;

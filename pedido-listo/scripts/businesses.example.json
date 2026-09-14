@@ -2,7 +2,7 @@
   "businesses": [
     {
       "id": "cocina-maria",
-      "name": "Cocina de María",
+      "name": "María",
       "slug": "cocina-maria",
       "whatsapp": "5255512345678",
       "address": "Col. Jardines, Tlajomulco",
@@ -14,7 +14,7 @@
     },
     {
       "id": "cocina-rosa",
-      "name": "Cocina de Doña Rosa",
+      "name": "Doña Rosa",
       "slug": "cocina-dona-rosa",
       "whatsapp": "5255598765432",
       "address": "Centro, Guadalajara",

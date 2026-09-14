@@ -45,7 +45,7 @@ export function OnboardingScreen({ onComplete, loading = false, error = null }: 
     >
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.emoji}>🍲</Text>
-        <Text style={styles.title}>Conecta tu cocina</Text>
+        <Text style={styles.title}>Conecta tu negocio</Text>
         <Text style={styles.subtitle}>Vincula tu negocio para ver pedidos en tiempo real</Text>
 
         <Text style={styles.label}>Link de tu catálogo</Text>
@@ -87,7 +87,7 @@ export function OnboardingScreen({ onComplete, loading = false, error = null }: 
         />
 
         <TouchableOpacity style={[styles.btn, loading && styles.btnDisabled]} onPress={handleSubmit} disabled={loading}>
-          <Text style={styles.btnText}>{loading ? 'Conectando...' : 'Entrar a mi cocina'}</Text>
+          <Text style={styles.btnText}>{loading ? 'Conectando...' : 'Entrar a mi negocio'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>

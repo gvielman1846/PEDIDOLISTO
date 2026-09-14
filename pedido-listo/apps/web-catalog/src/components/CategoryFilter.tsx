@@ -6,7 +6,7 @@ interface Props {
 
 export function CategoryFilter({ categories, active, onChange }: Props) {
   return (
-    <nav className="category-nav" aria-label="Categorías del menú">
+    <nav className="category-nav" aria-label="Categorías de productos">
       <div className="category-nav__scroll">
         {categories.map((cat) => (
           <button

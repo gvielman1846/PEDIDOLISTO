@@ -113,7 +113,7 @@ export function useProducts(businessId: string, canEditCategories = false) {
       }
       if (categories.length <= 1) throw new Error('Debe quedar al menos una categoria.');
       if (products.some((product) => product.categoryId === categoryId)) {
-        throw new Error('Mueve o elimina los platillos de esta categoria antes de borrarla.');
+        throw new Error('Mueve o elimina los productos de esta categoria antes de borrarla.');
       }
       await deleteCategory(businessId, categoryId);
     },
@@ -125,7 +125,7 @@ export function useProducts(businessId: string, canEditCategories = false) {
       try {
         await updateProductAvailability(businessId, productId, available);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'No se pudo actualizar el platillo');
+        setError(err instanceof Error ? err.message : 'No se pudo actualizar el producto');
       }
     },
     [businessId]
@@ -137,8 +137,8 @@ export function useProducts(businessId: string, canEditCategories = false) {
       let imageUrl: string | undefined;
       let photoWarning: string | null = null;
 
-      // La foto se sube antes de crear el documento para no dejar un platillo a
-      // medias, pero si falla se guarda igual: perder el platillo es peor.
+      // La foto se sube antes de crear el documento para no dejar un producto a
+      // medias, pero si falla se guarda igual: perder el producto es peor.
       if (draft.imageUri) {
         try {
           const blob = await uriToBlob(draft.imageUri);
@@ -151,7 +151,7 @@ export function useProducts(businessId: string, canEditCategories = false) {
         } catch (err) {
           const code = (err as { code?: string })?.code;
           const detail = code ?? (err instanceof Error ? err.message : 'error desconocido');
-          photoWarning = `Se guardo el platillo, pero la foto no subio: ${detail}`;
+          photoWarning = `Se guardo el producto, pero la foto no subio: ${detail}`;
         }
       }
 
@@ -165,7 +165,7 @@ export function useProducts(businessId: string, canEditCategories = false) {
           imageUrl,
           order: products.length,
         }),
-        'El platillo ya aparece en tu menu, pero la red esta lenta: se terminara de subir solo.'
+        'El producto ya se guardo, pero la red esta lenta: se terminara de subir solo.'
       );
 
       return [photoWarning, pending].filter(Boolean).join(' ') || null;
@@ -203,7 +203,7 @@ export function useProducts(businessId: string, canEditCategories = false) {
           emoji: draft.emoji,
           imageUrl,
         }),
-        'Los cambios ya se ven en tu menu, pero la red esta lenta: se terminaran de subir solos.'
+        'Los cambios ya se guardaron, pero la red esta lenta: se terminaran de subir solos.'
       );
 
       return [photoWarning, pending].filter(Boolean).join(' ') || null;
@@ -216,7 +216,7 @@ export function useProducts(businessId: string, canEditCategories = false) {
       try {
         await deleteProduct(businessId, productId);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'No se pudo eliminar el platillo');
+        setError(err instanceof Error ? err.message : 'No se pudo eliminar el producto');
         throw err;
       }
     },

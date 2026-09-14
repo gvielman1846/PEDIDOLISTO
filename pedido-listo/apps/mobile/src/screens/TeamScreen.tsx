@@ -57,7 +57,7 @@ export function TeamScreen({ businessId }: Props) {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Equipo</Text>
       <Text style={styles.subtitle}>
-        Invita con el correo de cada persona. Ellos crean su propia cuenta y entran a esta cocina.
+        Invita con el correo de cada persona. Ellos crean su propia cuenta y entran a este negocio.
       </Text>
 
       <Text style={styles.label}>Correo a invitar</Text>

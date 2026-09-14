@@ -25,7 +25,7 @@ interface Props {
   onAddCategory: (name: string) => Promise<void>;
   onEditCategory: (categoryId: string, name: string) => Promise<void>;
   onRemoveCategory: (categoryId: string) => Promise<void>;
-  /** Devuelve un aviso cuando el platillo se guardo pero la foto no. */
+  /** Devuelve un aviso cuando el producto se guardo pero la foto no. */
   onAddProduct: (draft: NewProductDraft) => Promise<string | null>;
   onEditProduct: (productId: string, draft: NewProductDraft) => Promise<string | null>;
   onRemoveProduct: (productId: string) => Promise<void>;
@@ -53,8 +53,8 @@ export function MenuScreen({
 
   function confirmDelete(product: Product) {
     Alert.alert(
-      'Eliminar platillo',
-      `¿Quitar "${product.name}" del menu? Tambien desaparecera del catalogo web.`,
+      'Eliminar producto',
+      `¿Quitar "${product.name}" de productos? Tambien desaparecera del catalogo web.`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -82,9 +82,9 @@ export function MenuScreen({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Menú del día</Text>
+      <Text style={styles.title}>Productos</Text>
       <Text style={styles.subtitle}>
-        {canEditMenu ? 'Marca platillos agotados o eliminalos del menu' : 'Marca platillos agotados con un tap'}
+        {canEditMenu ? 'Marca productos agotados o eliminalos' : 'Marca productos agotados con un tap'}
       </Text>
 
       {error && <Text style={styles.error}>{error}</Text>}
@@ -116,9 +116,9 @@ export function MenuScreen({
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyEmoji}>📋</Text>
-            <Text style={styles.emptyTitle}>Sin platillos aun</Text>
+            <Text style={styles.emptyTitle}>Sin productos aun</Text>
             <Text style={styles.emptyText}>
-              Los platillos de tu catálogo web apareceran aqui
+              Los productos de tu catálogo web apareceran aqui
             </Text>
           </View>
         }
@@ -164,7 +164,7 @@ export function MenuScreen({
         ListFooterComponent={
           canEditMenu ? (
             <TouchableOpacity style={styles.addBtn} onPress={() => setAdding(true)}>
-              <Text style={styles.addBtnText}>+ Agregar platillo</Text>
+              <Text style={styles.addBtnText}>+ Agregar producto</Text>
             </TouchableOpacity>
           ) : null
         }

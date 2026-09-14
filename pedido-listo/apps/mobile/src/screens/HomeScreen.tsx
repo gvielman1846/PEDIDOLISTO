@@ -36,7 +36,7 @@ export function HomeScreen({ kitchen, productCount, role, onNavigate }: Props) {
       <View style={styles.stats}>
         <View style={styles.statCard}>
           <Text style={styles.statNum}>{productCount}</Text>
-          <Text style={styles.statLabel}>Platillos</Text>
+          <Text style={styles.statLabel}>Productos</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statNum}>Gratis</Text>
@@ -68,7 +68,7 @@ export function HomeScreen({ kitchen, productCount, role, onNavigate }: Props) {
           <View>
             <Text style={styles.actionTitle}>Productos</Text>
             <Text style={styles.actionDesc}>
-              {role === 'kitchen' ? 'Marcar platillos agotados' : 'Agregar platillos, marcar agotados'}
+              {role === 'kitchen' ? 'Marcar productos agotados' : 'Agregar productos, marcar agotados'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -89,7 +89,7 @@ export function HomeScreen({ kitchen, productCount, role, onNavigate }: Props) {
           <Text style={styles.actionEmoji}>👥</Text>
           <View>
             <Text style={styles.actionTitle}>Equipo</Text>
-            <Text style={styles.actionDesc}>Invitar cocina y entrega</Text>
+            <Text style={styles.actionDesc}>Invitar preparador y entrega</Text>
           </View>
         </TouchableOpacity>
       )}

@@ -3,7 +3,7 @@ import demoMenu from './demo-menu.json';
 
 export const DEMO_BUSINESS: Business = {
   id: 'demo',
-  name: 'Cocina Chef Cueto',
+  name: 'Chef Cueto',
   slug: 'cocina-chef-cueto',
   whatsapp: '525513690163',
   address: 'Alta California Residencial, Tlajomulco',

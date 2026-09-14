@@ -84,16 +84,16 @@ export function AuthScreen({
         <Text style={styles.emoji}>🍲</Text>
         <Text style={styles.title}>
           {pendingEmail
-            ? 'Falta crear tu cocina'
+            ? 'Falta crear tu negocio'
             : legacyBusinessName
               ? `Protege ${legacyBusinessName}`
-              : 'PedidoListo Cocina'}
+              : 'PedidoListo'}
         </Text>
         <Text style={styles.subtitle}>
           {pendingEmail
             ? `Tu cuenta ${pendingEmail} ya existe pero todavia no tiene un negocio. Completa los datos para terminar, o pide la invitacion al dueno.`
             : legacyBusinessName
-              ? 'Crea una cuenta para conservar esta cocina y abrirla desde cualquier telefono.'
+              ? 'Crea una cuenta para conservar este negocio y abrirlo desde cualquier telefono.'
               : mode === 'signin'
                 ? 'Entra con tu correo y tu contraseña. Si te invitaron, usa el mismo correo de la invitacion.'
                 : 'Crea tu cuenta. Te enviaremos un correo con un link para activarla y elegir tu contraseña.'}
@@ -218,11 +218,11 @@ export function AuthScreen({
             {loading
               ? 'Procesando...'
               : pendingEmail
-                ? 'Crear mi cocina'
+                ? 'Crear mi negocio'
                 : mode === 'signin'
                   ? 'Entrar'
                   : legacyBusinessName
-                    ? 'Proteger mi cocina'
+                    ? 'Proteger mi negocio'
                     : 'Crear cuenta'}
           </Text>
         </TouchableOpacity>

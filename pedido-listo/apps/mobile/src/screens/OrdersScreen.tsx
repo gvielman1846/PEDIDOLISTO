@@ -37,6 +37,8 @@ interface ListProps {
   emptyTitle: string;
   emptyText: string;
   header?: ReactNode;
+  // Pedidos de hoy solo muestra nombre y productos; Ventas conserva la tarjeta completa.
+  compact?: boolean;
 }
 
 export function OrderList({
@@ -50,6 +52,7 @@ export function OrderList({
   emptyTitle,
   emptyText,
   header,
+  compact = false,
 }: ListProps) {
   const [selected, setSelected] = useState<Order | null>(null);
 
@@ -84,27 +87,48 @@ export function OrderList({
         }
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.card} onPress={() => setSelected(item)}>
-            <View style={styles.cardTop}>
-              <Text style={styles.time}>{formatTime(item.createdAt)}</Text>
-              <View style={[styles.badge, { backgroundColor: getStatusColor(item.status) + '22' }]}>
-                <Text style={[styles.badgeText, { color: getStatusColor(item.status) }]}>
-                  {ORDER_STATUS_LABELS[item.status]}
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.customer}>{item.customerName}</Text>
-            {item.customerPhone ? (
-              <Text style={styles.phone}>{formatCustomerPhone(item.customerPhone)}</Text>
-            ) : null}
-            {item.paymentMethod ? (
-              <Text style={styles.phone}>{PAYMENT_METHOD_LABELS[item.paymentMethod]}</Text>
-            ) : null}
-            <View style={styles.cardBottom}>
-              <Text style={styles.items}>
-                {item.items.length} platillo{item.items.length === 1 ? '' : 's'}
-              </Text>
-              <Text style={styles.total}>{formatMXN(item.total)}</Text>
-            </View>
+            {compact ? (
+              <>
+                <View style={styles.cardTop}>
+                  <Text style={styles.customerCompact}>{item.customerName}</Text>
+                  <View style={[styles.badge, { backgroundColor: getStatusColor(item.status) + '22' }]}>
+                    <Text style={[styles.badgeText, { color: getStatusColor(item.status) }]}>
+                      {ORDER_STATUS_LABELS[item.status]}
+                    </Text>
+                  </View>
+                </View>
+                {item.items.map((line) => (
+                  <View key={`${item.id}-${line.productId}`} style={styles.previewLine}>
+                    <Text style={styles.previewQty}>{line.quantity}×</Text>
+                    <Text style={styles.previewName}>{line.name}</Text>
+                  </View>
+                ))}
+              </>
+            ) : (
+              <>
+                <View style={styles.cardTop}>
+                  <Text style={styles.time}>{formatTime(item.createdAt)}</Text>
+                  <View style={[styles.badge, { backgroundColor: getStatusColor(item.status) + '22' }]}>
+                    <Text style={[styles.badgeText, { color: getStatusColor(item.status) }]}>
+                      {ORDER_STATUS_LABELS[item.status]}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.customer}>{item.customerName}</Text>
+                {item.customerPhone ? (
+                  <Text style={styles.phone}>{formatCustomerPhone(item.customerPhone)}</Text>
+                ) : null}
+                {item.paymentMethod ? (
+                  <Text style={styles.phone}>{PAYMENT_METHOD_LABELS[item.paymentMethod]}</Text>
+                ) : null}
+                <View style={styles.cardBottom}>
+                  <Text style={styles.items}>
+                    {item.items.length} producto{item.items.length === 1 ? '' : 's'}
+                  </Text>
+                  <Text style={styles.total}>{formatMXN(item.total)}</Text>
+                </View>
+              </>
+            )}
           </TouchableOpacity>
         )}
       />
@@ -137,6 +161,7 @@ export function OrdersScreen({ businessId, role }: { businessId: string; role: S
       subtitle="Solo aparecen los pedidos de este dia"
       emptyTitle="Sin pedidos hoy"
       emptyText="Cuando un cliente envie un pedido, aparecera aqui. El historial esta en Ventas."
+      compact
     />
   );
 }
@@ -311,11 +336,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   time: { fontSize: 13, color: colors.muted, fontWeight: '600' },
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   badgeText: { fontSize: 12, fontWeight: '700' },
   customer: { fontSize: 17, fontWeight: '700', color: colors.text, marginTop: 8 },
+  customerCompact: { flex: 1, fontSize: 17, fontWeight: '700', color: colors.text, marginRight: 8 },
+  previewLine: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingVertical: 3 },
+  previewQty: { width: 28, fontWeight: '700', color: colors.accent },
+  previewName: { flex: 1, fontSize: 15, color: colors.text },
   phone: { fontSize: 13, color: colors.muted, marginTop: 2 },
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   items: { fontSize: 13, color: colors.muted },

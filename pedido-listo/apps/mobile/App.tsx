@@ -271,7 +271,7 @@ function AppContent() {
     try {
       await writeOwnerMembership(businessId, uid, email);
     } catch (err) {
-      setAuthNotice(`Tu cocina quedo lista, pero no se guardo el equipo: ${describeAuthError(err)}`);
+      setAuthNotice(`Tu negocio quedo listo, pero no se guardo el equipo: ${describeAuthError(err)}`);
     }
   }
 

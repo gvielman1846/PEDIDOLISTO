@@ -107,7 +107,7 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
     const parsedPrice = Number(price.replace(',', '.'));
 
     if (!name.trim()) {
-      setError('Ponle nombre al platillo.');
+      setError('Ponle nombre al producto.');
       return;
     }
 
@@ -134,7 +134,7 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
       reset();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el platillo.');
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el producto.');
     } finally {
       setSaving(false);
     }
@@ -157,7 +157,7 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
               style={styles.scroll}
               showsVerticalScrollIndicator
               keyboardShouldPersistTaps="handled">
-              <Text style={styles.title}>{isEditing ? 'Editar platillo' : 'Nuevo platillo'}</Text>
+              <Text style={styles.title}>{isEditing ? 'Editar producto' : 'Nuevo producto'}</Text>
 
               <Text style={styles.label}>Nombre</Text>
               <TextInput
@@ -242,7 +242,7 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
               disabled={saving}
             >
               <Text style={styles.saveText}>
-                {saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Guardar platillo'}
+                {saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Guardar producto'}
               </Text>
             </TouchableOpacity>
 

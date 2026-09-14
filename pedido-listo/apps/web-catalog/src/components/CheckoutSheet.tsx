@@ -113,7 +113,7 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
 
       openWhatsApp(url);
       if (saveFailed) {
-        alert('Tu pedido se envia por WhatsApp, pero no se registro en la cocina. Confirmalo con el negocio.');
+        alert('Tu pedido se envia por WhatsApp, pero no se registro en el negocio. Confirmalo con ellos.');
         return;
       }
       onClose();
@@ -227,7 +227,7 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
             </p>
           )}
 
-          <label htmlFor="customer-note">Nota para la cocina</label>
+          <label htmlFor="customer-note">Nota para el pedido</label>
           <textarea
             id="customer-note"
             className="input input--textarea"

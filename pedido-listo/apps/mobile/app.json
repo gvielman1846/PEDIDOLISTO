@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "PedidoListo Cocina",
+    "name": "PedidoListo",
     "slug": "pedido-listo-cocina",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -34,8 +34,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Permite elegir fotos de tus platillos desde la galeria.",
-          "cameraPermission": "Permite tomar fotos de tus platillos."
+          "photosPermission": "Permite elegir fotos de tus productos desde la galeria.",
+          "cameraPermission": "Permite tomar fotos de tus productos."
         }
       ]
     ],

@@ -93,7 +93,7 @@ export function buildOrderMessage(
   }
 
   if (checkout.note) {
-    sections.push(`Nota cocina: _${checkout.note}_`);
+    sections.push(`Nota: _${checkout.note}_`);
   }
 
   sections.push(

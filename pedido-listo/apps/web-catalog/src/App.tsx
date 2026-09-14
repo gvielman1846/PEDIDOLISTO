@@ -43,8 +43,8 @@ function CatalogView({ business, categories, products, source }: ReadyCatalog) {
 
       {products.length === 0 ? (
         <div className="empty-menu">
-          <p className="status-title">Menu vacio</p>
-          <p className="status-text">Corre <code>npm run seed:demo</code> para cargar platillos en Firebase.</p>
+          <p className="status-title">Sin productos</p>
+          <p className="status-text">Corre <code>npm run seed:demo</code> para cargar productos en Firebase.</p>
         </div>
       ) : (
         <>
@@ -96,7 +96,7 @@ function App() {
       <div className="app-shell app-shell--centered">
         <div className="status-card">
           <div className="status-spinner" />
-          <p className="status-title">Cargando menu...</p>
+          <p className="status-title">Cargando productos...</p>
         </div>
       </div>
     );
@@ -106,7 +106,7 @@ function App() {
     return (
       <div className="app-shell app-shell--centered">
         <div className="status-card">
-          <p className="status-title">Cocina no encontrada</p>
+          <p className="status-title">Negocio no encontrado</p>
           <p className="status-text">
             No existe un negocio con el enlace <strong>/{catalog.slug}</strong>.
           </p>
