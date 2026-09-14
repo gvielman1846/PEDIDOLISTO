@@ -4,7 +4,7 @@ export type StaffRole = 'owner' | 'kitchen' | 'delivery';
 
 export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
   owner: 'Dueno',
-  kitchen: 'Cocina',
+  kitchen: 'Preparador',
   delivery: 'Entrega',
 };
 

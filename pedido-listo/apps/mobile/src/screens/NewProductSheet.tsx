@@ -11,7 +11,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -22,9 +21,6 @@ import { resolveProductImageUrl } from '../lib/catalog';
 import { colors } from '../theme';
 
 const FALLBACK_CATEGORY = 'general';
-
-// Alto del asa, los dos botones y los margenes de la hoja.
-const SHEET_CHROME = 200;
 
 interface Props {
   visible: boolean;
@@ -45,7 +41,6 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
 
   function reset() {
     setName('');
@@ -156,8 +151,10 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
           <Pressable style={styles.backdrop} onPress={handleClose} />
           <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
             <View style={styles.handle} />
+            {/* flexShrink deja que el formulario ceda el alto que necesitan los
+                botones en vez de adivinarlo con una medida fija. */}
             <ScrollView
-              style={{ maxHeight: height * 0.92 - insets.bottom - SHEET_CHROME }}
+              style={styles.scroll}
               showsVerticalScrollIndicator
               keyboardShouldPersistTaps="handled">
               <Text style={styles.title}>{isEditing ? 'Editar platillo' : 'Nuevo platillo'}</Text>
@@ -280,6 +277,7 @@ const styles = StyleSheet.create({
     padding: 20,
     maxHeight: '92%',
   },
+  scroll: { flexShrink: 1 },
   handle: {
     width: 40,
     height: 4,

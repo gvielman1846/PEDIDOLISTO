@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Pressable,
-  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Order, StaffRole } from '@pedido-listo/types';
@@ -25,10 +24,6 @@ import {
 } from '../lib/orders';
 import { colors } from '../theme';
 
-// Alto del asa, los dos botones y los margenes de la hoja. Lo que sobra del
-// 88% de la pantalla es el espacio real que le toca a la lista.
-const SHEET_CHROME = 200;
-
 interface Props {
   order: Order | null;
   businessId: string;
@@ -39,7 +34,6 @@ interface Props {
 export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
   const [updating, setUpdating] = useState(false);
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
 
   if (!order) return null;
 
@@ -66,11 +60,15 @@ export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
         <Pressable style={styles.backdrop} onPress={onClose} />
         <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
           <View style={styles.handle} />
+          {/* flexShrink deja que la lista ceda el alto que necesitan los botones,
+              en vez de adivinarlo con una medida fija que no cuadra en todos los
+              telefonos ni cuando el boton de estado no aparece. */}
           <ScrollView
-            style={{ maxHeight: height * 0.88 - insets.bottom - SHEET_CHROME }}
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator>
             <View style={styles.header}>
-              <View>
+              <View style={styles.headerInfo}>
                 <Text style={styles.title}>{order.customerName}</Text>
                 <Text style={styles.meta}>
                   {formatTime(order.createdAt)} · {getDeliveryLabel(order)}
@@ -204,6 +202,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 16,
   },
+  scroll: { flexShrink: 1 },
+  scrollContent: { paddingBottom: 4 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -211,9 +211,12 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 16,
   },
+  // Sin flex el nombre y la fecha no cortan linea y empujan la etiqueta fuera
+  // de la pantalla.
+  headerInfo: { flex: 1 },
   title: { fontSize: 22, fontWeight: '800', color: colors.text },
   meta: { fontSize: 13, color: colors.muted, marginTop: 4 },
-  badge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
+  badge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, flexShrink: 0 },
   badgeText: { fontSize: 12, fontWeight: '700' },
   section: {
     fontSize: 12,
