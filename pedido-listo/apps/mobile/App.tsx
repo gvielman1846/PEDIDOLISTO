@@ -281,12 +281,12 @@ function KitchenTabs({
   const tabs: Array<[Tab, string, string]> = [
     ['home', '🏠', 'Inicio'],
     ['orders', '🛒', 'Pedidos'],
-    ['calendar', '📅', 'Agenda'],
+    ['calendar', '📅', 'Ventas'],
   ];
-  if (kitchen.role !== 'delivery') tabs.push(['menu', '📋', 'Menu']);
+  if (kitchen.role !== 'delivery') tabs.push(['menu', '📋', 'Productos']);
   if (kitchen.role === 'owner') {
-    tabs.push(['share', '🔗', 'Compartir']);
     tabs.push(['team', '👥', 'Equipo']);
+    tabs.push(['share', '🔗', 'Perfil']);
   }
 
   return (
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   tabIcon: { fontSize: 22 },
-  tabLabel: { fontSize: 10, color: colors.muted, fontWeight: '600', marginTop: 3 },
+  tabLabel: { fontSize: 9, color: colors.muted, fontWeight: '600', marginTop: 3 },
   tabLabelActive: { color: colors.accent },
   signOut: { position: 'absolute', top: 12, right: 20, padding: 8 },
   signOutText: { color: 'white', fontSize: 12, fontWeight: '700' },

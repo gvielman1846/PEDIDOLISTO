@@ -132,7 +132,7 @@ export function OrdersScreen({ businessId, role }: { businessId: string; role: S
       title="Pedidos de hoy"
       subtitle="Solo aparecen los pedidos de este dia"
       emptyTitle="Sin pedidos hoy"
-      emptyText="Cuando un cliente envie un pedido, aparecera aqui. El historial esta en Calendario."
+      emptyText="Cuando un cliente envie un pedido, aparecera aqui. El historial esta en Ventas."
     />
   );
 }
@@ -171,7 +171,7 @@ export function CalendarScreen({ businessId, role }: { businessId: string; role:
       orders={dayOrders}
       loading={loading}
       error={error}
-      title="Calendario"
+      title="Ventas"
       subtitle="Pedidos de dias anteriores"
       emptyTitle={days.length === 0 ? 'Sin historial' : 'Sin pedidos ese dia'}
       emptyText={

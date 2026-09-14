@@ -57,7 +57,7 @@ export function HomeScreen({ kitchen, productCount, role, onNavigate }: Props) {
       <TouchableOpacity style={styles.action} onPress={() => onNavigate('calendar')}>
         <Text style={styles.actionEmoji}>📅</Text>
         <View>
-          <Text style={styles.actionTitle}>Calendario</Text>
+          <Text style={styles.actionTitle}>Ventas</Text>
           <Text style={styles.actionDesc}>Pedidos de dias anteriores</Text>
         </View>
       </TouchableOpacity>
@@ -66,7 +66,7 @@ export function HomeScreen({ kitchen, productCount, role, onNavigate }: Props) {
         <TouchableOpacity style={styles.action} onPress={() => onNavigate('menu')}>
           <Text style={styles.actionEmoji}>📋</Text>
           <View>
-            <Text style={styles.actionTitle}>Gestionar menú</Text>
+            <Text style={styles.actionTitle}>Productos</Text>
             <Text style={styles.actionDesc}>
               {role === 'kitchen' ? 'Marcar platillos agotados' : 'Agregar platillos, marcar agotados'}
             </Text>
@@ -78,7 +78,7 @@ export function HomeScreen({ kitchen, productCount, role, onNavigate }: Props) {
         <TouchableOpacity style={styles.action} onPress={() => onNavigate('share')}>
           <Text style={styles.actionEmoji}>🔗</Text>
           <View>
-            <Text style={styles.actionTitle}>Compartir catálogo</Text>
+            <Text style={styles.actionTitle}>Perfil</Text>
             <Text style={styles.actionDesc}>Link, QR e Instagram</Text>
           </View>
         </TouchableOpacity>
