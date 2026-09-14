@@ -3,6 +3,10 @@ import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
+// El paquete se compila también con el tsconfig del navegador, que no incluye
+// tipos de Node. Metro sí reemplaza estas lecturas literales al crear el APK.
+declare const process: { env: Record<string, string | undefined> } | undefined;
+
 /**
  * Metro (EAS/Android) solo incrusta EXPO_PUBLIC_* si se lee `process.env.NOMBRE`
  * con el nombre literal. `process.env[key]` queda vacio en el APK y Firebase
@@ -10,6 +14,7 @@ import { getStorage, type FirebaseStorage } from 'firebase/storage';
  * Vite sigue usando import.meta.env.VITE_* para el catalogo web.
  */
 function expoPublicEnv(key: string): string {
+  if (typeof process === 'undefined') return '';
   const values: Record<string, string | undefined> = {
     EXPO_PUBLIC_FIREBASE_API_KEY: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
     EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,

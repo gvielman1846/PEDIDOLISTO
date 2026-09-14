@@ -1,16 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Category, Product } from '@pedido-listo/types';
 import {
+  createCategory,
   createProduct,
+  deleteCategory,
   deleteProduct,
-  getCategories,
+  ensureDefaultCategories,
+  newCategoryId,
   newProductId,
+  subscribeToCategories,
   subscribeToProducts,
+  updateCategory,
   updateProduct,
   updateProductAvailability,
   uploadProductImage,
 } from '@pedido-listo/firebase';
 import { uriToBlob } from '../lib/upload';
+
+const DEFAULT_CATEGORY_IDS = new Set(['antojitos', 'platos', 'bebidas', 'postres']);
 
 export interface NewProductDraft {
   name: string;
@@ -45,7 +52,7 @@ async function withPendingFallback(write: Promise<unknown>, pending: string): Pr
   }
 }
 
-export function useProducts(businessId: string) {
+export function useProducts(businessId: string, canEditCategories = false) {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,20 +77,48 @@ export function useProducts(businessId: string) {
   }, [businessId]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    getCategories(businessId)
-      .then((next) => {
-        if (!cancelled) setCategories(next);
-      })
-      .catch(() => {
-        // el alta de platillos sigue funcionando sin categorias cargadas
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    const unsubscribe = subscribeToCategories(
+      businessId,
+      setCategories,
+      (err) => setError(err.message)
+    );
+    return unsubscribe;
   }, [businessId]);
+
+  useEffect(() => {
+    if (!canEditCategories) return;
+    void ensureDefaultCategories(businessId).catch((err) => {
+      setError(err instanceof Error ? err.message : 'No se pudieron preparar las categorias');
+    });
+  }, [businessId, canEditCategories]);
+
+  const addCategory = useCallback(
+    async (name: string): Promise<void> => {
+      await createCategory(businessId, newCategoryId(businessId), name, categories.length);
+    },
+    [businessId, categories.length]
+  );
+
+  const editCategory = useCallback(
+    async (categoryId: string, name: string): Promise<void> => {
+      await updateCategory(businessId, categoryId, name);
+    },
+    [businessId]
+  );
+
+  const removeCategory = useCallback(
+    async (categoryId: string): Promise<void> => {
+      if (DEFAULT_CATEGORY_IDS.has(categoryId)) {
+        throw new Error('Las categorias iniciales se pueden renombrar, pero no eliminar.');
+      }
+      if (categories.length <= 1) throw new Error('Debe quedar al menos una categoria.');
+      if (products.some((product) => product.categoryId === categoryId)) {
+        throw new Error('Mueve o elimina los platillos de esta categoria antes de borrarla.');
+      }
+      await deleteCategory(businessId, categoryId);
+    },
+    [businessId, categories.length, products]
+  );
 
   const toggleAvailable = useCallback(
     async (productId: string, available: boolean) => {
@@ -194,6 +229,9 @@ export function useProducts(businessId: string) {
     loading,
     error,
     toggleAvailable,
+    addCategory,
+    editCategory,
+    removeCategory,
     addProduct,
     editProduct,
     removeProduct,

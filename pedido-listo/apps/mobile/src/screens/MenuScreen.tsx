@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import type { Category, Product } from '@pedido-listo/types';
 import { ProductImage } from '../components/ProductImage';
+import { CategorySheet } from './CategorySheet';
 import { NewProductSheet } from './NewProductSheet';
 import type { NewProductDraft } from '../hooks/useProducts';
 import { colors } from '../theme';
@@ -21,6 +22,9 @@ interface Props {
   loading: boolean;
   error: string | null;
   onToggleAvailable: (productId: string, available: boolean) => void;
+  onAddCategory: (name: string) => Promise<void>;
+  onEditCategory: (categoryId: string, name: string) => Promise<void>;
+  onRemoveCategory: (categoryId: string) => Promise<void>;
   /** Devuelve un aviso cuando el platillo se guardo pero la foto no. */
   onAddProduct: (draft: NewProductDraft) => Promise<string | null>;
   onEditProduct: (productId: string, draft: NewProductDraft) => Promise<string | null>;
@@ -34,6 +38,9 @@ export function MenuScreen({
   loading,
   error,
   onToggleAvailable,
+  onAddCategory,
+  onEditCategory,
+  onRemoveCategory,
   onAddProduct,
   onEditProduct,
   onRemoveProduct,
@@ -41,6 +48,7 @@ export function MenuScreen({
 }: Props) {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
+  const [managingCategories, setManagingCategories] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   function confirmDelete(product: Product) {
@@ -93,6 +101,18 @@ export function MenuScreen({
         keyExtractor={(item) => item.id!}
         style={styles.listFlex}
         contentContainerStyle={styles.list}
+        ListHeaderComponent={
+          canEditMenu ? (
+            <TouchableOpacity
+              style={styles.categoriesButton}
+              onPress={() => setManagingCategories(true)}
+            >
+              <Text style={styles.categoriesButtonText}>
+                Categorias ({categories.length}) · Agregar o editar
+              </Text>
+            </TouchableOpacity>
+          ) : null
+        }
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyEmoji}>📋</Text>
@@ -166,6 +186,14 @@ export function MenuScreen({
           setNotice(await onAddProduct(draft));
         }}
       />
+      <CategorySheet
+        visible={managingCategories}
+        categories={categories}
+        onClose={() => setManagingCategories(false)}
+        onAdd={onAddCategory}
+        onEdit={onEditCategory}
+        onRemove={onRemoveCategory}
+      />
     </View>
   );
 }
@@ -190,6 +218,17 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 14, color: colors.muted, textAlign: 'center', marginTop: 6, paddingHorizontal: 24 },
   listFlex: { flex: 1 },
   list: { gap: 10, paddingBottom: 24, flexGrow: 1 },
+  categoriesButton: {
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.accentSoft,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    paddingHorizontal: 12,
+  },
+  categoriesButtonText: { color: colors.accentDark, fontWeight: '800', fontSize: 13 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',

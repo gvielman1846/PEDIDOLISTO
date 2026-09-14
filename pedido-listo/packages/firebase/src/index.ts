@@ -13,6 +13,12 @@ export {
   getBusinessByOwnerId,
   createOwnerBusiness,
   getCategories,
+  subscribeToCategories,
+  ensureDefaultCategories,
+  newCategoryId,
+  createCategory,
+  updateCategory,
+  deleteCategory,
   getProducts,
   subscribeToProducts,
   newProductId,
@@ -22,6 +28,7 @@ export {
   deleteProduct,
   loadCatalogBySlug,
 } from './queries';
+export { DEFAULT_CATEGORIES } from './queries';
 export type { CatalogData, CreateBusinessInput, CreateProductInput } from './queries';
 export { createOrder, subscribeToOrders, updateOrderStatus } from './orders';
 export type { CreateOrderInput } from './orders';

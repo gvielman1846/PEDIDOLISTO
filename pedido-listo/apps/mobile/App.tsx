@@ -244,8 +244,19 @@ function AppContent() {
 function KitchenTabs({ kitchen, onSignOut }: { kitchen: KitchenData; onSignOut: () => void }) {
   const [tab, setTab] = useState<Tab>('orders');
   const insets = useSafeAreaInsets();
-  const { products, categories, loading, error, toggleAvailable, addProduct, editProduct, removeProduct } =
-    useProducts(kitchen.businessId);
+  const {
+    products,
+    categories,
+    loading,
+    error,
+    toggleAvailable,
+    addCategory,
+    editCategory,
+    removeCategory,
+    addProduct,
+    editProduct,
+    removeProduct,
+  } = useProducts(kitchen.businessId, kitchen.role === 'owner');
 
   // Con el dueño son seis pestañas, asi que cada etiqueta solo tiene un sexto
   // del ancho: los nombres largos no caben ni en pantallas chicas.
@@ -287,6 +298,9 @@ function KitchenTabs({ kitchen, onSignOut }: { kitchen: KitchenData; onSignOut: 
             loading={loading}
             error={error}
             onToggleAvailable={toggleAvailable}
+            onAddCategory={addCategory}
+            onEditCategory={editCategory}
+            onRemoveCategory={removeCategory}
             onAddProduct={addProduct}
             onEditProduct={editProduct}
             onRemoveProduct={removeProduct}

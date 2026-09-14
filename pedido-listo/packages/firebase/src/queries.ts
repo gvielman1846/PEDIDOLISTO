@@ -17,6 +17,13 @@ import {
 import type { Business, Category, Product } from '@pedido-listo/types';
 import { getDb } from './config';
 
+export const DEFAULT_CATEGORIES: Category[] = [
+  { id: 'antojitos', name: 'Antojitos', order: 0 },
+  { id: 'platos', name: 'Platos fuertes', order: 1 },
+  { id: 'bebidas', name: 'Bebidas', order: 2 },
+  { id: 'postres', name: 'Postres', order: 3 },
+];
+
 function mapBusiness(id: string, data: DocumentData): Business {
   return {
     id,
@@ -109,10 +116,14 @@ export async function createOwnerBusiness(
     plan: 'free',
     createdAt: serverTimestamp(),
   });
-  await setDoc(doc(db, 'businesses', businessRef.id, 'categories', 'general'), {
-    name: 'General',
-    order: 0,
-  });
+  await Promise.all(
+    DEFAULT_CATEGORIES.map((category) =>
+      setDoc(doc(db, 'businesses', businessRef.id, 'categories', category.id!), {
+        name: category.name,
+        order: category.order,
+      })
+    )
+  );
 
   const created = await getBusinessById(businessRef.id);
   if (!created) throw new Error('No se pudo crear el negocio.');
@@ -127,6 +138,65 @@ export async function getCategories(businessId: string): Promise<Category[]> {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => mapCategory(d.id, d.data()));
+}
+
+export function subscribeToCategories(
+  businessId: string,
+  onChange: (categories: Category[]) => void,
+  onError?: (error: Error) => void
+): Unsubscribe {
+  const q = query(
+    collection(getDb(), 'businesses', businessId, 'categories'),
+    orderBy('order', 'asc')
+  );
+  return onSnapshot(
+    q,
+    (snap) => onChange(snap.docs.map((d) => mapCategory(d.id, d.data()))),
+    (err) => onError?.(err)
+  );
+}
+
+/** Agrega las categorías iniciales que le falten a un negocio ya existente. */
+export async function ensureDefaultCategories(businessId: string): Promise<void> {
+  const db = getDb();
+  const existing = await getDocs(collection(db, 'businesses', businessId, 'categories'));
+  const existingIds = new Set(existing.docs.map((category) => category.id));
+  await Promise.all(
+    DEFAULT_CATEGORIES.filter((category) => !existingIds.has(category.id!)).map((category) =>
+      setDoc(doc(db, 'businesses', businessId, 'categories', category.id!), {
+        name: category.name,
+        order: category.order,
+      })
+    )
+  );
+}
+
+export function newCategoryId(businessId: string): string {
+  return doc(collection(getDb(), 'businesses', businessId, 'categories')).id;
+}
+
+export async function createCategory(
+  businessId: string,
+  categoryId: string,
+  name: string,
+  order: number
+): Promise<void> {
+  await setDoc(doc(getDb(), 'businesses', businessId, 'categories', categoryId), {
+    name,
+    order,
+  });
+}
+
+export async function updateCategory(
+  businessId: string,
+  categoryId: string,
+  name: string
+): Promise<void> {
+  await updateDoc(doc(getDb(), 'businesses', businessId, 'categories', categoryId), { name });
+}
+
+export async function deleteCategory(businessId: string, categoryId: string): Promise<void> {
+  await deleteDoc(doc(getDb(), 'businesses', businessId, 'categories', categoryId));
 }
 
 export async function getProducts(businessId: string): Promise<Product[]> {
