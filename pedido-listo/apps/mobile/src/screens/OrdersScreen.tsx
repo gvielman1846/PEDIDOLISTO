@@ -147,8 +147,9 @@ function CashCutCard({ orders }: { orders: Order[] }) {
   return (
     <View style={styles.cutCard}>
       <Text style={styles.cutTitle}>Corte de caja</Text>
+      <Text style={styles.cutHint}>Solo pedidos entregados</Text>
       {cut.lines.length === 0 ? (
-        <Text style={styles.cutEmpty}>Aun no hay ventas este dia.</Text>
+        <Text style={styles.cutEmpty}>Aun no hay pedidos entregados este dia.</Text>
       ) : (
         cut.lines.map((line) => (
           <View key={line.key} style={styles.cutRow}>
@@ -274,7 +275,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  cutTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 4 },
+  cutTitle: { fontSize: 16, fontWeight: '800', color: colors.text },
+  cutHint: { fontSize: 12, color: colors.muted, marginTop: 2, marginBottom: 4 },
   cutEmpty: { fontSize: 13, color: colors.muted, paddingVertical: 8 },
   cutRow: {
     paddingVertical: 10,

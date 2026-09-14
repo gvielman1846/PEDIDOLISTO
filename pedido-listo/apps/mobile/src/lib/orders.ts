@@ -99,6 +99,7 @@ export function summarizeDaySales(orders: Order[]): {
   let deliveryTotal = 0;
 
   for (const order of orders) {
+    if (order.status !== 'entregado') continue;
     deliveryTotal += order.deliveryFee ?? 0;
     for (const item of order.items) {
       const key = `${item.productId}|${item.price}`;
