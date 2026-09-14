@@ -109,11 +109,9 @@ export function normalizeWhatsAppPhone(whatsapp: string): string {
   const digits = whatsapp.replace(/\D/g, '');
   if (!digits) return '';
 
-  // Mexico: mobiles often need 521 + 10 digits for WhatsApp deep links.
-  if (digits.length === 10) return `521${digits}`;
-  if (digits.length === 12 && digits.startsWith('52') && !digits.startsWith('521')) {
-    return `521${digits.slice(2)}`;
-  }
+  // Mexico: mobiles need 521 + the 10 national digits for WhatsApp deep links.
+  // Tomamos los ultimos 10 porque hay negocios guardados con la lada repetida.
+  if (digits.length >= 10) return `521${digits.slice(-10)}`;
 
   return digits;
 }

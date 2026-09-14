@@ -15,6 +15,7 @@ export {
   createOwnerBusiness,
   updateBusinessPaymentSettings,
   updateBusinessWhatsApp,
+  toMxMobileDigits,
   getCategories,
   subscribeToCategories,
   ensureDefaultCategories,

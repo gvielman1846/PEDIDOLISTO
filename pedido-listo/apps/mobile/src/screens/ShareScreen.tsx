@@ -31,6 +31,7 @@ import {
   saveUserPhone,
   setActiveKitchen,
   signOutOwner,
+  toMxMobileDigits,
   updateBusinessPaymentSettings,
   updateBusinessWhatsApp,
   writeOwnerMembership,
@@ -168,8 +169,9 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
     setError(null);
     setNotice(null);
     try {
-      await updateBusinessWhatsApp(kitchen.businessId, whatsapp);
-      const digits = whatsapp.replace(/\D/g, '');
+      const digits = toMxMobileDigits(whatsapp);
+      await updateBusinessWhatsApp(kitchen.businessId, digits);
+      setWhatsapp(digits);
       onKitchenChange({ whatsapp: digits });
       Alert.alert('Listo', 'Los pedidos nuevos llegaran a ese WhatsApp.');
     } catch (err) {
@@ -366,7 +368,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
 
           <Text style={styles.section}>WhatsApp de pedidos</Text>
           <Text style={styles.sectionHint}>
-            Aqui llegan los pedidos de tu catalogo. Escribe los 10 digitos.
+            Aqui llegan los pedidos de tu catalogo. Escribe los 10 digitos, sin la lada 52.
           </Text>
           <TextInput
             style={styles.input}

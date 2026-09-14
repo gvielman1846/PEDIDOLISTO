@@ -116,7 +116,7 @@ export async function createOwnerBusiness(
     ownerId,
     name: input.name,
     slug: input.slug,
-    whatsapp: input.whatsapp,
+    whatsapp: toMxMobileDigits(input.whatsapp),
     address: input.address ?? null,
     deliveryFee: 0,
     minOrder: 0,
@@ -151,13 +151,30 @@ export async function updateBusinessPaymentSettings(
   });
 }
 
+/**
+ * Guardamos siempre los 10 digitos nacionales: el link de WhatsApp le agrega
+ * el 521 al final. Si se guarda con lada incluida el link queda invalido.
+ */
+export function toMxMobileDigits(whatsapp: string): string {
+  const digits = whatsapp.replace(/\D/g, '');
+  const national =
+    digits.length === 13 && digits.startsWith('521')
+      ? digits.slice(3)
+      : digits.length === 12 && digits.startsWith('52')
+        ? digits.slice(2)
+        : digits;
+  if (national.length !== 10) {
+    throw new Error('Escribe los 10 digitos de tu WhatsApp, sin la lada 52.');
+  }
+  return national;
+}
+
 /** Es el numero al que el catalogo web manda los pedidos. */
 export async function updateBusinessWhatsApp(
   businessId: string,
   whatsapp: string
 ): Promise<void> {
-  const digits = whatsapp.replace(/\D/g, '');
-  if (digits.length < 10) throw new Error('Escribe los 10 digitos de tu WhatsApp.');
+  const digits = toMxMobileDigits(whatsapp);
   await updateDoc(doc(getDb(), 'businesses', businessId), { whatsapp: digits });
 }
 
