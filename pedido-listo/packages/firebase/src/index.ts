@@ -46,6 +46,7 @@ export {
   subscribeToAuthState,
   claimBusinessOwnership,
 } from './auth';
+export { deleteOwnerAccount } from './account';
 export {
   getMembership,
   writeOwnerMembership,

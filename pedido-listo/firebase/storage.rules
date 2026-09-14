@@ -14,7 +14,8 @@ service firebase.storage {
     }
 
     function isUnownedBusiness(businessId) {
-      return ownerOf(businessId) == null;
+      return firestore.exists(/databases/(default)/documents/businesses/$(businessId))
+        && ownerOf(businessId) == null;
     }
 
     function canSeedUnowned(businessId) {

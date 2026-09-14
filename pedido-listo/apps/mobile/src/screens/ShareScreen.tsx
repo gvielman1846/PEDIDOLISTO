@@ -24,11 +24,13 @@ import {
   changeAccountEmail,
   changeAccountPassword,
   createOwnerBusiness,
+  deleteOwnerAccount,
   getFirebaseAuth,
   getUserProfile,
   listUserKitchens,
   saveUserPhone,
   setActiveKitchen,
+  signOutOwner,
   updateBusinessPaymentSettings,
   updateBusinessWhatsApp,
   writeOwnerMembership,
@@ -77,6 +79,9 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
   const [newEmail, setNewEmail] = useState(accountEmail);
   const [currentPassword, setCurrentPassword] = useState('');
   const [nextPassword, setNextPassword] = useState('');
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [newName, setNewName] = useState('');
   const [newSlug, setNewSlug] = useState('');
   const [newWhatsapp, setNewWhatsapp] = useState('');
@@ -190,6 +195,48 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       setError(err instanceof Error ? err.message : 'No se pudo cambiar el correo.');
     } finally {
       setSaving(false);
+    }
+  }
+
+  function confirmDeleteAccount() {
+    if (deleteConfirmation.trim().toUpperCase() !== 'ELIMINAR') {
+      setError('Escribe ELIMINAR para confirmar.');
+      return;
+    }
+    if (!deletePassword) {
+      setError('Escribe tu contraseña actual.');
+      return;
+    }
+
+    Alert.alert(
+      '¿Eliminar cuenta definitivamente?',
+      'Se borrarán todos tus negocios, productos, fotos, pedidos, clientes, equipo, invitaciones y tu acceso. Esta acción no se puede deshacer.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar todo',
+          style: 'destructive',
+          onPress: () => void runDeleteAccount(),
+        },
+      ]
+    );
+  }
+
+  async function runDeleteAccount() {
+    setDeletingAccount(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await deleteOwnerAccount(deletePassword);
+      await signOutOwner();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'No se pudo eliminar la cuenta.';
+      setError(
+        message.includes('failed-precondition')
+          ? 'La sesión venció. Confirma otra vez tu contraseña y vuelve a intentar.'
+          : message
+      );
+      setDeletingAccount(false);
     }
   }
 
@@ -469,6 +516,48 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
         </>
       )}
 
+      {isOwner && kitchen.ownerId === uid && (
+        <View style={styles.dangerZone}>
+          <Text style={styles.dangerTitle}>Eliminar cuenta</Text>
+          <Text style={styles.dangerHint}>
+            Borra definitivamente tu cuenta y todos tus negocios, productos, fotos,
+            pedidos, clientes, equipo e invitaciones. No se puede deshacer.
+          </Text>
+          <Text style={styles.label}>Escribe ELIMINAR</Text>
+          <TextInput
+            style={styles.input}
+            value={deleteConfirmation}
+            onChangeText={setDeleteConfirmation}
+            placeholder="ELIMINAR"
+            placeholderTextColor={colors.muted}
+            autoCapitalize="characters"
+            editable={!deletingAccount}
+          />
+          <Text style={styles.label}>Contraseña actual</Text>
+          <TextInput
+            style={styles.input}
+            value={deletePassword}
+            onChangeText={setDeletePassword}
+            placeholder="Confirma tu contraseña"
+            placeholderTextColor={colors.muted}
+            secureTextEntry
+            autoCapitalize="none"
+            editable={!deletingAccount}
+          />
+          <TouchableOpacity
+            style={styles.deleteBtn}
+            onPress={confirmDeleteAccount}
+            disabled={deletingAccount}
+          >
+            {deletingAccount ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.deleteBtnText}>Eliminar cuenta y todos mis datos</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
+
       {error && <Text style={styles.error}>{error}</Text>}
       {notice && <Text style={styles.notice}>{notice}</Text>}
 
@@ -570,6 +659,23 @@ const styles = StyleSheet.create({
   },
   error: { color: colors.danger, fontSize: 13, marginTop: 12 },
   notice: { color: colors.accentDark, fontSize: 13, marginTop: 12 },
+  dangerZone: {
+    marginTop: 36,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.danger,
+  },
+  dangerTitle: { fontSize: 18, fontWeight: '800', color: colors.danger },
+  dangerHint: { fontSize: 13, color: colors.muted, lineHeight: 19, marginTop: 6, marginBottom: 10 },
+  deleteBtn: {
+    minHeight: 54,
+    borderRadius: 14,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  deleteBtnText: { color: 'white', fontWeight: '800', fontSize: 15, textAlign: 'center' },
   footer: {
     fontSize: 12,
     color: colors.muted,

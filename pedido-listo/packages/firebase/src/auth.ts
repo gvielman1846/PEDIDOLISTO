@@ -52,7 +52,7 @@ export async function sendPasswordSetupEmail(email: string): Promise<void> {
   await sendPasswordResetEmail(getFirebaseAuth(), email.trim());
 }
 
-async function reauthenticate(password: string): Promise<User> {
+export async function reauthenticateAccount(password: string): Promise<User> {
   const auth = getFirebaseAuth();
   const user = auth.currentUser;
   if (!user?.email) throw new Error('No autenticado');
@@ -62,7 +62,7 @@ async function reauthenticate(password: string): Promise<User> {
 }
 
 export async function changeAccountEmail(newEmail: string, currentPassword: string): Promise<void> {
-  const user = await reauthenticate(currentPassword);
+  const user = await reauthenticateAccount(currentPassword);
   await verifyBeforeUpdateEmail(user, newEmail.trim());
 }
 
@@ -70,7 +70,7 @@ export async function changeAccountPassword(currentPassword: string, nextPasswor
   if (nextPassword.trim().length < 8) {
     throw new Error('La nueva contraseña debe tener al menos 8 caracteres.');
   }
-  const user = await reauthenticate(currentPassword);
+  const user = await reauthenticateAccount(currentPassword);
   await updatePassword(user, nextPassword);
 }
 

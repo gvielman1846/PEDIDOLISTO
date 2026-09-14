@@ -27,7 +27,8 @@ service cloud.firestore {
     }
 
     function isUnownedBusiness(businessId) {
-      return ownerOf(businessId) == null;
+      return exists(/databases/$(database)/documents/businesses/$(businessId))
+        && ownerOf(businessId) == null;
     }
 
     function canClaimBusiness(businessId) {
@@ -80,7 +81,8 @@ service cloud.firestore {
 
       match /orders/{orderId} {
         allow read: if isStaff(businessId);
-        allow create: if true;
+        allow create: if exists(/databases/$(database)/documents/businesses/$(businessId))
+          && !('deletingAt' in get(/databases/$(database)/documents/businesses/$(businessId)).data);
         allow update: if isStaff(businessId);
         allow delete: if isOwner(businessId);
       }
