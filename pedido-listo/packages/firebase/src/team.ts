@@ -27,6 +27,16 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
+/**
+ * El dueno real es el de `ownerId`. Una membresia vieja puede decir "owner" por
+ * error, asi que la bajamos a cocina en vez de dar permisos de dueno.
+ */
+function ownerSafeRole(business: Business, uid: string, role: StaffRole): StaffRole {
+  if (!business.ownerId) return role;
+  if (business.ownerId === uid) return 'owner';
+  return role === 'owner' ? 'kitchen' : role;
+}
+
 function mapInvite(id: string, data: DocumentData): TeamInvite {
   return {
     id,
@@ -54,6 +64,15 @@ export async function getMembership(uid: string): Promise<{ businessId: string; 
   if (!snap.exists()) return null;
   const data = snap.data();
   return { businessId: data.businessId, role: data.role };
+}
+
+async function getMemberRole(businessId: string, uid: string): Promise<StaffRole | null> {
+  try {
+    const snap = await getDoc(doc(getDb(), 'businesses', businessId, 'members', uid));
+    return snap.exists() ? ((snap.data().role as StaffRole) ?? null) : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function writeOwnerMembership(businessId: string, uid: string, email: string): Promise<void> {
@@ -204,9 +223,8 @@ export async function listUserKitchens(uid: string): Promise<KitchenAccess[]> {
       if (!businessId || byId.has(businessId)) continue;
       const business = await getBusinessById(businessId);
       if (business) {
-        const role =
-          business.ownerId === uid ? 'owner' : ((item.data().role as StaffRole) ?? 'kitchen');
-        byId.set(businessId, { business, role });
+        const stored = (item.data().role as StaffRole) ?? 'kitchen';
+        byId.set(businessId, { business, role: ownerSafeRole(business, uid, stored) });
       }
     }
   } catch {
@@ -215,11 +233,14 @@ export async function listUserKitchens(uid: string): Promise<KitchenAccess[]> {
 
   try {
     const membership = await getMembership(uid);
-    if (membership) {
+    // El doc de `members` manda: si ya lo leimos no lo pisamos con la membresia.
+    if (membership && !byId.has(membership.businessId)) {
       const business = await getBusinessById(membership.businessId);
       if (business) {
-        const role = business.ownerId === uid ? 'owner' : membership.role;
-        byId.set(membership.businessId, { business, role });
+        byId.set(membership.businessId, {
+          business,
+          role: ownerSafeRole(business, uid, membership.role),
+        });
       }
     }
   } catch {
@@ -237,10 +258,11 @@ export async function setActiveKitchen(
   if (!access.business.id) throw new Error('Negocio invalido');
   const db = getDb();
   const normalized = normalizeEmail(email);
+  const stored = (await getMemberRole(access.business.id, uid)) ?? access.role;
   await setDoc(doc(db, 'memberships', uid), {
     uid,
     businessId: access.business.id,
-    role: access.role,
+    role: ownerSafeRole(access.business, uid, stored),
     email: normalized,
   });
   await setDoc(
@@ -271,8 +293,8 @@ export async function resolveKitchenAccess(
     if (membership) {
       const business = await getBusinessById(membership.businessId);
       if (business) {
-        const role = business.ownerId === uid ? 'owner' : membership.role;
-        return { business, role };
+        const stored = (await getMemberRole(membership.businessId, uid)) ?? membership.role;
+        return { business, role: ownerSafeRole(business, uid, stored) };
       }
     }
   } catch (err) {

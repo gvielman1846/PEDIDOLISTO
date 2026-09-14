@@ -55,6 +55,7 @@ interface KitchenData {
   closeTime: string;
   slug: string;
   businessId: string;
+  ownerId?: string;
   role: StaffRole;
   paymentMethods?: PaymentMethod[];
   clabe?: string;
@@ -68,6 +69,7 @@ function kitchenFromAccess(business: Business, role: StaffRole): KitchenData {
     closeTime: business.closeTime ?? '20:00',
     slug: business.slug,
     businessId: business.id!,
+    ownerId: business.ownerId,
     role,
     paymentMethods: business.paymentMethods,
     clabe: business.clabe,
@@ -214,7 +216,9 @@ function AppContent() {
         return;
       }
 
-      if (legacyBusiness?.id) {
+      // Este atajo solo existe para el negocio viejo que aun no tiene dueno:
+      // nunca debe volver dueno a alguien de un negocio que ya lo tiene.
+      if (legacyBusiness?.id && (!legacyBusiness.ownerId || legacyBusiness.ownerId === user.uid)) {
         await claimMembership(legacyBusiness.id, user.uid, email);
         if (createdNewAuth.current) {
           await finishWithSetupEmail();
@@ -334,6 +338,9 @@ function KitchenTabs({
 }) {
   const [tab, setTab] = useState<Tab>('orders');
   const insets = useSafeAreaInsets();
+  // Si el negocio ya guarda su ownerId, ese dato manda sobre el rol de la sesion.
+  const uid = getFirebaseAuth().currentUser?.uid;
+  const isOwner = kitchen.role === 'owner' && (!kitchen.ownerId || kitchen.ownerId === uid);
   const {
     products,
     categories,
@@ -346,7 +353,7 @@ function KitchenTabs({
     addProduct,
     editProduct,
     removeProduct,
-  } = useProducts(kitchen.businessId, kitchen.role === 'owner');
+  } = useProducts(kitchen.businessId, isOwner);
 
   // Con el dueño son seis pestañas, asi que cada etiqueta solo tiene un sexto
   // del ancho: los nombres largos no caben ni en pantallas chicas.
@@ -356,7 +363,7 @@ function KitchenTabs({
     ['calendar', '📅', 'Ventas'],
   ];
   if (kitchen.role !== 'delivery') tabs.push(['menu', '📋', 'Productos']);
-  if (kitchen.role === 'owner') {
+  if (isOwner) {
     tabs.push(['team', '👥', 'Equipo']);
   }
   tabs.push(['share', '🔗', 'Perfil']);
@@ -394,7 +401,7 @@ function KitchenTabs({
             onAddProduct={addProduct}
             onEditProduct={editProduct}
             onRemoveProduct={removeProduct}
-            canEditMenu={kitchen.role === 'owner'}
+            canEditMenu={isOwner}
           />
         )}
         {tab === 'share' && (
@@ -405,7 +412,7 @@ function KitchenTabs({
             onSelectKitchen={onSelectKitchen}
           />
         )}
-        {tab === 'team' && kitchen.role === 'owner' && <TeamScreen businessId={kitchen.businessId} />}
+        {tab === 'team' && isOwner && <TeamScreen businessId={kitchen.businessId} />}
       </View>
 
       <View style={[styles.tabs, { paddingBottom: insets.bottom + 10 }]}>

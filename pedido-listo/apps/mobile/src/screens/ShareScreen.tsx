@@ -40,6 +40,7 @@ interface KitchenData {
   name: string;
   slug?: string;
   businessId: string;
+  ownerId?: string;
   role: StaffRole;
   paymentMethods?: PaymentMethod[];
   clabe?: string;
@@ -56,7 +57,9 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
   const uid = getFirebaseAuth().currentUser?.uid;
   const slug = kitchen.slug ?? 'cocina-chef-cueto';
   const catalogUrl = buildCatalogUrl(slug);
-  const isOwner = kitchen.role === 'owner';
+  // Si el negocio ya guarda su ownerId, ese dato manda sobre el rol de la sesion.
+  const isOwner =
+    kitchen.role === 'owner' && (!kitchen.ownerId || kitchen.ownerId === uid);
 
   const [methods, setMethods] = useState<PaymentMethod[]>(() =>
     enabledPaymentMethods(kitchen)
