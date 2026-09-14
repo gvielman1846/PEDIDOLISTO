@@ -147,34 +147,31 @@ function CashCutCard({ orders }: { orders: Order[] }) {
   return (
     <View style={styles.cutCard}>
       <Text style={styles.cutTitle}>Corte de caja</Text>
-      <View style={styles.cutHead}>
-        <Text style={[styles.cutHeadText, styles.cutColName]}>Articulo</Text>
-        <Text style={[styles.cutHeadText, styles.cutColUnit]}>P. unitario</Text>
-        <Text style={[styles.cutHeadText, styles.cutColSale]}>Venta del dia</Text>
-      </View>
       {cut.lines.length === 0 ? (
         <Text style={styles.cutEmpty}>Aun no hay ventas este dia.</Text>
       ) : (
         cut.lines.map((line) => (
           <View key={line.key} style={styles.cutRow}>
-            <View style={styles.cutColName}>
-              <Text style={styles.cutName} numberOfLines={2}>
-                {line.name}
+            <Text style={styles.cutName} numberOfLines={2}>
+              {line.name}
+            </Text>
+            <View style={styles.cutMeta}>
+              <Text style={styles.cutMetaText}>
+                P. unitario {formatMXN(line.unitPrice)} · {line.quantity} vendido
+                {line.quantity === 1 ? '' : 's'}
               </Text>
-              <Text style={styles.cutQty}>
-                {line.quantity} vendido{line.quantity === 1 ? '' : 's'}
-              </Text>
+              <Text style={styles.cutSale}>{formatMXN(line.amount)}</Text>
             </View>
-            <Text style={styles.cutColUnit}>{formatMXN(line.unitPrice)}</Text>
-            <Text style={styles.cutColSale}>{formatMXN(line.amount)}</Text>
           </View>
         ))
       )}
       {cut.deliveryTotal > 0 && (
         <View style={styles.cutRow}>
-          <Text style={[styles.cutName, styles.cutColName]}>Envios</Text>
-          <Text style={styles.cutColUnit}>—</Text>
-          <Text style={styles.cutColSale}>{formatMXN(cut.deliveryTotal)}</Text>
+          <Text style={styles.cutName}>Envios</Text>
+          <View style={styles.cutMeta}>
+            <Text style={styles.cutMetaText}>Costo de entrega</Text>
+            <Text style={styles.cutSale}>{formatMXN(cut.deliveryTotal)}</Text>
+          </View>
         </View>
       )}
       <View style={styles.cutTotalRow}>
@@ -277,22 +274,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  cutTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 10 },
-  cutHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  cutHeadText: { fontSize: 11, fontWeight: '700', color: colors.muted, textTransform: 'uppercase' },
-  cutColName: { flex: 1.4, paddingRight: 8 },
-  cutColUnit: { width: 88, textAlign: 'right', fontSize: 13, fontWeight: '600', color: colors.text },
-  cutColSale: { width: 92, textAlign: 'right', fontSize: 13, fontWeight: '700', color: colors.text },
+  cutTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 4 },
   cutEmpty: { fontSize: 13, color: colors.muted, paddingVertical: 8 },
   cutRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  cutName: { fontSize: 13, fontWeight: '700', color: colors.text },
-  cutQty: { fontSize: 11, color: colors.muted, marginTop: 2 },
+  cutName: { fontSize: 14, fontWeight: '700', color: colors.text },
+  cutMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 8,
+  },
+  cutMetaText: { flex: 1, fontSize: 12, color: colors.muted },
+  cutSale: { fontSize: 15, fontWeight: '800', color: colors.text },
   cutTotalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
