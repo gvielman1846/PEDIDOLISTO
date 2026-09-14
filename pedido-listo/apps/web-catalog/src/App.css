@@ -542,10 +542,23 @@ body {
   transition: all 0.15s ease;
 }
 
-.delivery-toggle__btn--active {
-  border-color: var(--accent);
+.delivery-toggle--three {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.clabe-hint {
+  margin: 10px 0 0;
+  padding: 12px 14px;
   background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  line-height: 1.4;
   color: var(--accent-hover);
+}
+
+.clabe-hint strong {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
 }
 
 .actions {

@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import type { Business, CartItem, CheckoutData } from '@pedido-listo/types';
+import { useEffect, useState } from 'react';
+import type { Business, CartItem, CheckoutData, PaymentMethod } from '@pedido-listo/types';
+import { enabledPaymentMethods, PAYMENT_METHOD_LABELS } from '@pedido-listo/types';
 import { createOrder, isFirebaseConfigured } from '@pedido-listo/firebase';
 import {
   buildOrderMessage,
@@ -23,8 +24,18 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
   const [deliveryType, setDeliveryType] = useState<CheckoutData['deliveryType']>('delivery');
   const [address, setAddress] = useState('');
   const [note, setNote] = useState('');
+  const methods = enabledPaymentMethods(business);
+  const methodsKey = methods.join(',');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(methods[0] ?? 'efectivo');
   const [sending, setSending] = useState(false);
   const [whatsAppUrl, setWhatsAppUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const next = methodsKey.split(',').filter(Boolean) as PaymentMethod[];
+    if (!next.includes(paymentMethod)) {
+      setPaymentMethod(next[0] ?? 'efectivo');
+    }
+  }, [methodsKey, paymentMethod]);
 
   if (!open) return null;
 
@@ -62,6 +73,14 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
       alert('Escribe tu dirección');
       return;
     }
+    if (!methods.includes(paymentMethod)) {
+      alert('Elige un metodo de pago');
+      return;
+    }
+    if (paymentMethod === 'transferencia' && !business.clabe) {
+      alert('Este negocio todavia no registro su CLABE. Elige otro metodo de pago.');
+      return;
+    }
     if (!business.whatsapp?.replace(/\D/g, '')) {
       alert('Este negocio no tiene WhatsApp configurado.');
       return;
@@ -73,6 +92,7 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
       deliveryType,
       address: address.trim() || undefined,
       note: note.trim() || undefined,
+      paymentMethod,
     };
 
     const message = buildOrderMessage(business, items, checkout);
@@ -186,6 +206,25 @@ export function CheckoutSheet({ business, items, subtotal, open, onClose }: Prop
                 placeholder="Calle, número, colonia"
               />
             </>
+          )}
+
+          <label>Metodo de pago</label>
+          <div className="delivery-toggle delivery-toggle--three">
+            {methods.map((method) => (
+              <button
+                key={method}
+                type="button"
+                className={`delivery-toggle__btn ${paymentMethod === method ? 'delivery-toggle__btn--active' : ''}`}
+                onClick={() => setPaymentMethod(method)}
+              >
+                {PAYMENT_METHOD_LABELS[method]}
+              </button>
+            ))}
+          </div>
+          {paymentMethod === 'transferencia' && business.clabe && (
+            <p className="clabe-hint">
+              Transfiere a esta CLABE: <strong>{business.clabe}</strong>
+            </p>
           )}
 
           <label htmlFor="customer-note">Nota para la cocina</label>

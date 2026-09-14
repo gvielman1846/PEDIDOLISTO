@@ -7,7 +7,7 @@ import {
   initialWindowMetrics,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import type { Business, StaffRole } from '@pedido-listo/types';
+import type { Business, StaffRole, PaymentMethod } from '@pedido-listo/types';
 import {
   createOwnerBusiness,
   getFirebaseAuth,
@@ -51,6 +51,8 @@ interface KitchenData {
   slug: string;
   businessId: string;
   role: StaffRole;
+  paymentMethods?: PaymentMethod[];
+  clabe?: string;
 }
 
 function kitchenFromAccess(business: Business, role: StaffRole): KitchenData {
@@ -62,6 +64,8 @@ function kitchenFromAccess(business: Business, role: StaffRole): KitchenData {
     slug: business.slug,
     businessId: business.id!,
     role,
+    paymentMethods: business.paymentMethods,
+    clabe: business.clabe,
   };
 }
 
@@ -238,10 +242,24 @@ function AppContent() {
     );
   }
 
-  return <KitchenTabs kitchen={kitchen} onSignOut={handleSignOut} />;
+  return (
+    <KitchenTabs
+      kitchen={kitchen}
+      onSignOut={handleSignOut}
+      onKitchenChange={(patch) => setKitchen((current) => (current ? { ...current, ...patch } : current))}
+    />
+  );
 }
 
-function KitchenTabs({ kitchen, onSignOut }: { kitchen: KitchenData; onSignOut: () => void }) {
+function KitchenTabs({
+  kitchen,
+  onSignOut,
+  onKitchenChange,
+}: {
+  kitchen: KitchenData;
+  onSignOut: () => void;
+  onKitchenChange: (patch: Partial<KitchenData>) => void;
+}) {
   const [tab, setTab] = useState<Tab>('orders');
   const insets = useSafeAreaInsets();
   const {
@@ -307,7 +325,12 @@ function KitchenTabs({ kitchen, onSignOut }: { kitchen: KitchenData; onSignOut: 
             canEditMenu={kitchen.role === 'owner'}
           />
         )}
-        {tab === 'share' && kitchen.role === 'owner' && <ShareScreen kitchen={kitchen} />}
+        {tab === 'share' && kitchen.role === 'owner' && (
+          <ShareScreen
+            kitchen={kitchen}
+            onKitchenChange={onKitchenChange}
+          />
+        )}
         {tab === 'team' && kitchen.role === 'owner' && <TeamScreen businessId={kitchen.businessId} />}
       </View>
 

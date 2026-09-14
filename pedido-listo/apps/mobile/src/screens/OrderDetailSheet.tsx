@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Order, StaffRole } from '@pedido-listo/types';
+import { PAYMENT_METHOD_LABELS } from '@pedido-listo/types';
 import { updateOrderStatus } from '@pedido-listo/firebase';
 import { openInGoogleMaps, openInWaze } from '../lib/maps';
 import { callCustomer, formatCustomerPhone, whatsappCustomer } from '../lib/contact';
@@ -71,7 +72,10 @@ export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
             <View style={styles.header}>
               <View>
                 <Text style={styles.title}>{order.customerName}</Text>
-                <Text style={styles.meta}>{formatTime(order.createdAt)} · {getDeliveryLabel(order)}</Text>
+                <Text style={styles.meta}>
+                  {formatTime(order.createdAt)} · {getDeliveryLabel(order)}
+                  {order.paymentMethod ? ` · ${PAYMENT_METHOD_LABELS[order.paymentMethod]}` : ''}
+                </Text>
               </View>
               <View style={[styles.badge, { backgroundColor: getStatusColor(order.status) + '22' }]}>
                 <Text style={[styles.badgeText, { color: getStatusColor(order.status) }]}>

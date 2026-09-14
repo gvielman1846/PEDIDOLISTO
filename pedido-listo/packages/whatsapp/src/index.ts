@@ -1,4 +1,5 @@
 import type { Business, CartItem, CheckoutData } from '@pedido-listo/types';
+import { PAYMENT_METHOD_LABELS } from '@pedido-listo/types';
 
 export function formatMXN(amount: number): string {
   return `$${amount.toLocaleString('es-MX')} MXN`;
@@ -29,7 +30,7 @@ function separator(): string {
 }
 
 export function buildOrderMessage(
-  business: Pick<Business, 'name' | 'deliveryFee'>,
+  business: Pick<Business, 'name' | 'deliveryFee' | 'clabe'>,
   items: CartItem[],
   checkout: CheckoutData
 ): string {
@@ -71,6 +72,14 @@ export function buildOrderMessage(
 
   sections.push(
     `*TOTAL: ${formatMXN(total)}*`,
+    `Pago: ${PAYMENT_METHOD_LABELS[checkout.paymentMethod]}`
+  );
+
+  if (checkout.paymentMethod === 'transferencia' && business.clabe) {
+    sections.push(`CLABE: ${business.clabe}`);
+  }
+
+  sections.push(
     ``,
     separator(),
     `*DATOS DEL CLIENTE*`,

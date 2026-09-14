@@ -12,6 +12,7 @@ export {
   getBusinessById,
   getBusinessByOwnerId,
   createOwnerBusiness,
+  updateBusinessPaymentSettings,
   getCategories,
   subscribeToCategories,
   ensureDefaultCategories,

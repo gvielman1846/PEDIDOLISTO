@@ -26,6 +26,29 @@ export interface TeamInvite {
   createdAt?: Date;
 }
 
+export type PaymentMethod = 'efectivo' | 'transferencia' | 'tarjeta';
+
+export const PAYMENT_METHODS: PaymentMethod[] = ['efectivo', 'transferencia', 'tarjeta'];
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  efectivo: 'Efectivo',
+  transferencia: 'Transferencia',
+  tarjeta: 'Tarjeta',
+};
+
+export function enabledPaymentMethods(
+  business: Pick<Business, 'paymentMethods'>
+): PaymentMethod[] {
+  const selected = business.paymentMethods?.filter((method) =>
+    PAYMENT_METHODS.includes(method)
+  );
+  return selected && selected.length > 0 ? selected : [...PAYMENT_METHODS];
+}
+
+export function normalizeClabe(value: string): string {
+  return value.replace(/\D/g, '').slice(0, 18);
+}
+
 export interface Business {
   id?: string;
   name: string;
@@ -39,6 +62,8 @@ export interface Business {
   closeTime?: string;
   isOpen?: boolean;
   plan: Plan;
+  paymentMethods?: PaymentMethod[];
+  clabe?: string;
   createdAt?: Date;
 }
 
@@ -76,6 +101,7 @@ export interface CheckoutData {
   deliveryType: DeliveryType;
   address?: string;
   note?: string;
+  paymentMethod: PaymentMethod;
 }
 
 export const DEMO_BUSINESS_ID = 'demo';
@@ -103,6 +129,7 @@ export interface Order {
   deliveryType: DeliveryType;
   address?: string;
   note?: string;
+  paymentMethod?: PaymentMethod;
   status: OrderStatus;
   createdAt?: Date;
   source: 'whatsapp';

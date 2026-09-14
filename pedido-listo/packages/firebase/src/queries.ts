@@ -14,7 +14,8 @@ import {
   type DocumentData,
   type Unsubscribe,
 } from 'firebase/firestore';
-import type { Business, Category, Product } from '@pedido-listo/types';
+import type { Business, Category, Product, PaymentMethod } from '@pedido-listo/types';
+import { PAYMENT_METHODS } from '@pedido-listo/types';
 import { getDb } from './config';
 
 export const DEFAULT_CATEGORIES: Category[] = [
@@ -38,6 +39,10 @@ function mapBusiness(id: string, data: DocumentData): Business {
     closeTime: data.closeTime,
     isOpen: data.isOpen,
     plan: data.plan ?? 'free',
+    paymentMethods: Array.isArray(data.paymentMethods)
+      ? data.paymentMethods.filter((method: PaymentMethod) => PAYMENT_METHODS.includes(method))
+      : undefined,
+    clabe: data.clabe ?? undefined,
     createdAt: data.createdAt?.toDate?.() ?? data.createdAt,
   };
 }
@@ -114,6 +119,8 @@ export async function createOwnerBusiness(
     closeTime: input.closeTime ?? '20:00',
     isOpen: true,
     plan: 'free',
+    paymentMethods: [...PAYMENT_METHODS],
+    clabe: null,
     createdAt: serverTimestamp(),
   });
   await Promise.all(
@@ -128,6 +135,16 @@ export async function createOwnerBusiness(
   const created = await getBusinessById(businessRef.id);
   if (!created) throw new Error('No se pudo crear el negocio.');
   return created;
+}
+
+export async function updateBusinessPaymentSettings(
+  businessId: string,
+  input: { paymentMethods: Business['paymentMethods']; clabe: string | null }
+): Promise<void> {
+  await updateDoc(doc(getDb(), 'businesses', businessId), {
+    paymentMethods: input.paymentMethods,
+    clabe: input.clabe,
+  });
 }
 
 export async function getCategories(businessId: string): Promise<Category[]> {

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import type { Order, StaffRole } from '@pedido-listo/types';
+import { PAYMENT_METHOD_LABELS } from '@pedido-listo/types';
 import { useOrders } from '../hooks/useOrders';
 import {
   dayKey,
@@ -90,6 +91,9 @@ export function OrderList({
             <Text style={styles.customer}>{item.customerName}</Text>
             {item.customerPhone ? (
               <Text style={styles.phone}>{formatCustomerPhone(item.customerPhone)}</Text>
+            ) : null}
+            {item.paymentMethod ? (
+              <Text style={styles.phone}>{PAYMENT_METHOD_LABELS[item.paymentMethod]}</Text>
             ) : null}
             <View style={styles.cardBottom}>
               <Text style={styles.items}>

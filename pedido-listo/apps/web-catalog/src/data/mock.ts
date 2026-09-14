@@ -13,6 +13,8 @@ export const DEMO_BUSINESS: Business = {
   closeTime: '20:00',
   isOpen: true,
   plan: 'free',
+  paymentMethods: ['efectivo', 'transferencia', 'tarjeta'],
+  clabe: '012345678901234567',
 };
 
 export const DEMO_CATEGORIES: Category[] = demoMenu.categories;
