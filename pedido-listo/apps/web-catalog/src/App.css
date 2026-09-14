@@ -542,8 +542,20 @@ body {
   transition: all 0.15s ease;
 }
 
+.delivery-toggle__btn--active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
 .delivery-toggle--three {
   grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* "Transferencia" no cabe a un tercio del ancho en pantallas chicas. */
+.delivery-toggle--three .delivery-toggle__btn {
+  padding: 14px 6px;
+  font-size: 0.8125rem;
 }
 
 .clabe-hint {
