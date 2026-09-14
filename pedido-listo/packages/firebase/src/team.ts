@@ -204,7 +204,9 @@ export async function listUserKitchens(uid: string): Promise<KitchenAccess[]> {
       if (!businessId || byId.has(businessId)) continue;
       const business = await getBusinessById(businessId);
       if (business) {
-        byId.set(businessId, { business, role: (item.data().role as StaffRole) ?? 'kitchen' });
+        const role =
+          business.ownerId === uid ? 'owner' : ((item.data().role as StaffRole) ?? 'kitchen');
+        byId.set(businessId, { business, role });
       }
     }
   } catch {
@@ -213,9 +215,12 @@ export async function listUserKitchens(uid: string): Promise<KitchenAccess[]> {
 
   try {
     const membership = await getMembership(uid);
-    if (membership && !byId.has(membership.businessId)) {
+    if (membership) {
       const business = await getBusinessById(membership.businessId);
-      if (business) byId.set(membership.businessId, { business, role: membership.role });
+      if (business) {
+        const role = business.ownerId === uid ? 'owner' : membership.role;
+        byId.set(membership.businessId, { business, role });
+      }
     }
   } catch {
     // sin membresia activa
@@ -265,7 +270,10 @@ export async function resolveKitchenAccess(
     const membership = await getMembership(uid);
     if (membership) {
       const business = await getBusinessById(membership.businessId);
-      if (business) return { business, role: membership.role };
+      if (business) {
+        const role = business.ownerId === uid ? 'owner' : membership.role;
+        return { business, role };
+      }
     }
   } catch (err) {
     onIssue?.(issueOf('tu membresia', err));

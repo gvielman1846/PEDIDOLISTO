@@ -51,6 +51,7 @@ export function normalizeClabe(value: string): string {
 
 export interface Business {
   id?: string;
+  ownerId?: string;
   name: string;
   slug: string;
   whatsapp: string;

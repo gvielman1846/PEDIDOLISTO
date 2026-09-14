@@ -28,6 +28,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
 function mapBusiness(id: string, data: DocumentData): Business {
   return {
     id,
+    ownerId: data.ownerId,
     name: data.name,
     slug: data.slug,
     whatsapp: data.whatsapp,
