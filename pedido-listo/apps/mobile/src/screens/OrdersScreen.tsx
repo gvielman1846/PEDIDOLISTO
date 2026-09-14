@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   FlatList,
+  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
@@ -19,6 +20,7 @@ import {
   isSameLocalDay,
   ORDER_STATUS_LABELS,
   startOfLocalDay,
+  summarizeDaySales,
 } from '../lib/orders';
 import { formatCustomerPhone } from '../lib/contact';
 import { OrderDetailSheet } from './OrderDetailSheet';
@@ -63,7 +65,6 @@ export function OrderList({
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
-      {header}
       {error && <Text style={styles.error}>{error}</Text>}
 
       <FlatList
@@ -71,6 +72,9 @@ export function OrderList({
         keyExtractor={(item) => item.id!}
         style={styles.listFlex}
         contentContainerStyle={styles.list}
+        ListHeaderComponent={
+          header ? <View style={styles.listHeader}>{header}</View> : null
+        }
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyEmoji}>📭</Text>
@@ -137,14 +141,58 @@ export function OrdersScreen({ businessId, role }: { businessId: string; role: S
   );
 }
 
+function CashCutCard({ orders }: { orders: Order[] }) {
+  const cut = useMemo(() => summarizeDaySales(orders), [orders]);
+
+  return (
+    <View style={styles.cutCard}>
+      <Text style={styles.cutTitle}>Corte de caja</Text>
+      <View style={styles.cutHead}>
+        <Text style={[styles.cutHeadText, styles.cutColName]}>Articulo</Text>
+        <Text style={[styles.cutHeadText, styles.cutColUnit]}>P. unitario</Text>
+        <Text style={[styles.cutHeadText, styles.cutColSale]}>Venta del dia</Text>
+      </View>
+      {cut.lines.length === 0 ? (
+        <Text style={styles.cutEmpty}>Aun no hay ventas este dia.</Text>
+      ) : (
+        cut.lines.map((line) => (
+          <View key={line.key} style={styles.cutRow}>
+            <View style={styles.cutColName}>
+              <Text style={styles.cutName} numberOfLines={2}>
+                {line.name}
+              </Text>
+              <Text style={styles.cutQty}>
+                {line.quantity} vendido{line.quantity === 1 ? '' : 's'}
+              </Text>
+            </View>
+            <Text style={styles.cutColUnit}>{formatMXN(line.unitPrice)}</Text>
+            <Text style={styles.cutColSale}>{formatMXN(line.amount)}</Text>
+          </View>
+        ))
+      )}
+      {cut.deliveryTotal > 0 && (
+        <View style={styles.cutRow}>
+          <Text style={[styles.cutName, styles.cutColName]}>Envios</Text>
+          <Text style={styles.cutColUnit}>—</Text>
+          <Text style={styles.cutColSale}>{formatMXN(cut.deliveryTotal)}</Text>
+        </View>
+      )}
+      <View style={styles.cutTotalRow}>
+        <Text style={styles.cutTotalLabel}>Total del dia</Text>
+        <Text style={styles.cutTotalValue}>{formatMXN(cut.total)}</Text>
+      </View>
+    </View>
+  );
+}
+
 export function CalendarScreen({ businessId, role }: { businessId: string; role: StaffRole }) {
   const { orders, loading, error } = useOrders(businessId);
+  const today = dayKey();
   const days = useMemo(() => {
-    const today = dayKey();
     const counts = new Map<string, { date: Date; count: number }>();
+    counts.set(today, { date: startOfLocalDay(), count: 0 });
     for (const order of orders) {
       const key = dayKey(order.createdAt);
-      if (key === today) continue;
       const date = startOfLocalDay(order.createdAt ?? new Date());
       const current = counts.get(key);
       counts.set(key, { date, count: (current?.count ?? 0) + 1 });
@@ -152,12 +200,12 @@ export function CalendarScreen({ businessId, role }: { businessId: string; role:
     return [...counts.entries()]
       .sort((a, b) => b[0].localeCompare(a[0]))
       .map(([key, value]) => ({ key, ...value }));
-  }, [orders]);
+  }, [orders, today]);
 
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const activeDay = selectedDay && days.some((day) => day.key === selectedDay)
     ? selectedDay
-    : days[0]?.key ?? null;
+    : today;
 
   const dayOrders = useMemo(
     () => orders.filter((order) => dayKey(order.createdAt) === activeDay),
@@ -172,26 +220,22 @@ export function CalendarScreen({ businessId, role }: { businessId: string; role:
       loading={loading}
       error={error}
       title="Ventas"
-      subtitle="Pedidos de dias anteriores"
-      emptyTitle={days.length === 0 ? 'Sin historial' : 'Sin pedidos ese dia'}
-      emptyText={
-        days.length === 0
-          ? 'Cuando cierren el dia, los pedidos pasados apareceran aqui.'
-          : 'Elige otro dia en la lista de arriba.'
-      }
+      subtitle="Corte de caja y pedidos del dia"
+      emptyTitle="Sin pedidos este dia"
+      emptyText="El corte de caja aparece arriba. Elige otro dia o espera el primer pedido."
       header={
-        days.length > 0 ? (
-          <FlatList
+        <>
+          <ScrollView
             horizontal
-            data={days}
-            keyExtractor={(item) => item.key}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.days}
             style={styles.daysList}
-            renderItem={({ item }) => {
+          >
+            {days.map((item) => {
               const active = item.key === activeDay;
               return (
                 <TouchableOpacity
+                  key={item.key}
                   style={[styles.dayChip, active && styles.dayChipActive]}
                   onPress={() => setSelectedDay(item.key)}
                 >
@@ -199,16 +243,17 @@ export function CalendarScreen({ businessId, role }: { businessId: string; role:
                     style={[styles.dayChipText, active && styles.dayChipTextActive]}
                     numberOfLines={1}
                   >
-                    {formatDayLabel(item.date)}
+                    {item.key === today ? 'Hoy' : formatDayLabel(item.date)}
                   </Text>
                   <Text style={[styles.dayChipCount, active && styles.dayChipTextActive]}>
                     {item.count}
                   </Text>
                 </TouchableOpacity>
               );
-            }}
-          />
-        ) : null
+            })}
+          </ScrollView>
+          <CashCutCard orders={dayOrders} />
+        </>
       }
     />
   );
@@ -223,7 +268,42 @@ const styles = StyleSheet.create({
   // Sin flex la lista crece con su contenido y se pasa de la pantalla, asi que
   // el scroll se corta antes del ultimo pedido.
   listFlex: { flex: 1 },
+  listHeader: { marginBottom: 12 },
   list: { gap: 10, paddingBottom: 24, flexGrow: 1 },
+  cutCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  cutTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 10 },
+  cutHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  cutHeadText: { fontSize: 11, fontWeight: '700', color: colors.muted, textTransform: 'uppercase' },
+  cutColName: { flex: 1.4, paddingRight: 8 },
+  cutColUnit: { width: 88, textAlign: 'right', fontSize: 13, fontWeight: '600', color: colors.text },
+  cutColSale: { width: 92, textAlign: 'right', fontSize: 13, fontWeight: '700', color: colors.text },
+  cutEmpty: { fontSize: 13, color: colors.muted, paddingVertical: 8 },
+  cutRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  cutName: { fontSize: 13, fontWeight: '700', color: colors.text },
+  cutQty: { fontSize: 11, color: colors.muted, marginTop: 2 },
+  cutTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+    paddingTop: 12,
+    borderTopWidth: 2,
+    borderTopColor: colors.text,
+  },
+  cutTotalLabel: { fontSize: 15, fontWeight: '800', color: colors.text },
+  cutTotalValue: { fontSize: 18, fontWeight: '800', color: colors.accentDark },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 14,

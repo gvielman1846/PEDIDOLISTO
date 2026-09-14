@@ -81,4 +81,48 @@ export function formatDayLabel(value: Date): string {
   return `${WEEKDAYS[value.getDay()]} ${value.getDate()} ${MONTHS[value.getMonth()]}`;
 }
 
+export interface DaySaleLine {
+  key: string;
+  name: string;
+  unitPrice: number;
+  quantity: number;
+  amount: number;
+}
+
+export function summarizeDaySales(orders: Order[]): {
+  lines: DaySaleLine[];
+  articleTotal: number;
+  deliveryTotal: number;
+  total: number;
+} {
+  const map = new Map<string, DaySaleLine>();
+  let deliveryTotal = 0;
+
+  for (const order of orders) {
+    deliveryTotal += order.deliveryFee ?? 0;
+    for (const item of order.items) {
+      const key = `${item.productId}|${item.price}`;
+      const current = map.get(key);
+      if (current) {
+        current.quantity += item.quantity;
+        current.amount += item.price * item.quantity;
+      } else {
+        map.set(key, {
+          key,
+          name: item.name,
+          unitPrice: item.price,
+          quantity: item.quantity,
+          amount: item.price * item.quantity,
+        });
+      }
+    }
+  }
+
+  const lines = [...map.values()].sort(
+    (a, b) => b.amount - a.amount || a.name.localeCompare(b.name, 'es')
+  );
+  const articleTotal = lines.reduce((sum, line) => sum + line.amount, 0);
+  return { lines, articleTotal, deliveryTotal, total: articleTotal + deliveryTotal };
+}
+
 export { ORDER_STATUS_LABELS };
