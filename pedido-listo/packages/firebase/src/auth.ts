@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword,
   linkWithCredential,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInAnonymously,
   signInWithEmailAndPassword,
   signOut,
@@ -24,23 +25,39 @@ export function subscribeToAuthState(onChange: (user: User | null) => void): Uns
   return onAuthStateChanged(getFirebaseAuth(), onChange);
 }
 
-export async function registerOwner(email: string, password: string): Promise<User> {
+export async function registerOwner(email: string, password?: string): Promise<User> {
   const auth = getFirebaseAuth();
   const current = auth.currentUser;
+  const secret = password && password.length >= 8 ? password : randomPassword();
 
   if (current?.isAnonymous) {
-    const credential = EmailAuthProvider.credential(email.trim(), password);
+    const credential = EmailAuthProvider.credential(email.trim(), secret);
     const result = await linkWithCredential(current, credential);
     return result.user;
   }
 
-  const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
+  const result = await createUserWithEmailAndPassword(auth, email.trim(), secret);
   return result.user;
 }
 
 export async function signInOwnerWithEmail(email: string, password: string): Promise<User> {
   const result = await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
   return result.user;
+}
+
+export async function sendPasswordSetupEmail(email: string): Promise<void> {
+  await sendPasswordResetEmail(getFirebaseAuth(), email.trim());
+}
+
+function randomPassword(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+  const bytes = new Uint8Array(24);
+  if (typeof globalThis.crypto?.getRandomValues === 'function') {
+    globalThis.crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < bytes.length; i += 1) bytes[i] = Math.floor(Math.random() * 256);
+  }
+  return Array.from(bytes, (byte) => chars[byte % chars.length]).join('');
 }
 
 export async function signOutOwner(): Promise<void> {

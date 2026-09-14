@@ -29,6 +29,7 @@ interface Props {
   notice?: string | null;
   onSignIn: (email: string, password: string) => void;
   onSignUp: (data: SignUpData) => void;
+  onForgotPassword: (email: string) => void;
   onSignOut: () => void;
 }
 
@@ -40,6 +41,7 @@ export function AuthScreen({
   notice,
   onSignIn,
   onSignUp,
+  onForgotPassword,
   onSignOut,
 }: Props) {
   const [mode, setMode] = useState<'signin' | 'signup'>(
@@ -93,8 +95,8 @@ export function AuthScreen({
             : legacyBusinessName
               ? 'Crea una cuenta para conservar esta cocina y abrirla desde cualquier telefono.'
               : mode === 'signin'
-                ? 'Entra con tu correo. Si te invitaron, usa el mismo correo de la invitacion.'
-                : 'Crea tu cuenta. Si eres el dueno, llena los datos del negocio. Si te invitaron, dejalo vacio.'}
+                ? 'Entra con tu correo y tu contraseña. Si te invitaron, usa el mismo correo de la invitacion.'
+                : 'Crea tu cuenta. Te enviaremos un correo con un link para activarla y elegir tu contraseña.'}
         </Text>
 
         {!pendingEmail && (
@@ -130,16 +132,31 @@ export function AuthScreen({
               autoComplete="email"
             />
 
-            <Text style={styles.label}>Contraseña</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Minimo 8 caracteres"
-              secureTextEntry
-              autoCapitalize="none"
-              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-            />
+            {mode === 'signin' ? (
+              <>
+                <Text style={styles.label}>Contraseña</Text>
+                <TextInput
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Tu contraseña"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoComplete="current-password"
+                />
+                <TouchableOpacity
+                  style={styles.forgotButton}
+                  onPress={() => onForgotPassword(email.trim())}
+                  disabled={loading}
+                >
+                  <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <Text style={styles.hint}>
+                No pongas contraseña aqui. Despues de crear la cuenta, el link del correo te deja activarla y elegirla.
+              </Text>
+            )}
           </>
         )}
 
@@ -239,6 +256,8 @@ const styles = StyleSheet.create({
   error: { color: colors.danger, fontSize: 13, lineHeight: 18, marginTop: 14 },
   notice: { color: colors.accentDark, fontSize: 12, lineHeight: 18, marginTop: 12 },
   hint: { fontSize: 12, color: colors.muted, marginTop: 6, lineHeight: 18 },
+  forgotButton: { alignSelf: 'flex-start', paddingVertical: 10 },
+  forgotText: { color: colors.accentDark, fontSize: 14, fontWeight: '700' },
   button: { backgroundColor: colors.accent, borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 24 },
   buttonDisabled: { opacity: 0.65 },
   buttonText: { color: 'white', fontSize: 16, fontWeight: '800' },

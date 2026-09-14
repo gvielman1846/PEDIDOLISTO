@@ -13,6 +13,7 @@ import {
   getFirebaseAuth,
   registerOwner,
   resolveKitchenAccess,
+  sendPasswordSetupEmail,
   signInOwnerWithEmail,
   signOutOwner,
   subscribeToAuthState,
@@ -33,10 +34,12 @@ type Tab = 'home' | 'orders' | 'calendar' | 'menu' | 'share' | 'team';
 
 function describeAuthError(err: unknown): string {
   const code = (err as { code?: string })?.code;
-  if (code === 'auth/email-already-in-use') return 'Ese correo ya tiene una cuenta. Usa Iniciar sesion.';
+  if (code === 'auth/email-already-in-use') return 'Ese correo ya tiene una cuenta. Usa Iniciar sesion o recupera tu contraseña.';
   if (code === 'auth/invalid-credential') return 'Correo o contraseña incorrectos.';
   if (code === 'auth/invalid-email') return 'El correo no es valido.';
   if (code === 'auth/weak-password') return 'Usa una contraseña mas segura.';
+  if (code === 'auth/user-not-found') return 'No hay una cuenta con ese correo.';
+  if (code === 'auth/too-many-requests') return 'Demasiados intentos. Espera un momento y vuelve a probar.';
   if (code === 'auth/invalid-api-key') {
     return 'Este build no tiene la configuracion de Firebase. Hay que generar un APK nuevo.';
   }
@@ -143,24 +146,66 @@ function AppContent() {
     }
   }
 
+  async function handleForgotPassword(email: string) {
+    setAuthError(null);
+    setAuthNotice(null);
+    if (!email.trim()) {
+      setAuthError('Escribe tu correo para enviarte el link.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await sendPasswordSetupEmail(email);
+      setAuthNotice(`Te enviamos un correo a ${email}. Abre el link para crear o cambiar tu contraseña.`);
+    } catch (err) {
+      setAuthError(describeAuthError(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleSignUp(data: SignUpData) {
     setLoading(true);
     setAuthError(null);
     setAuthNotice(null);
+    const createdNewAuth = { current: false };
     try {
       const current = getFirebaseAuth().currentUser;
       const alreadySignedIn = Boolean(current && !current.isAnonymous);
 
-      if (!alreadySignedIn && (!data.email.trim() || data.password.length < 8)) {
-        throw new Error('Escribe un correo valido y una contraseña de al menos 8 caracteres.');
+      if (!alreadySignedIn && !data.email.trim()) {
+        throw new Error('Escribe un correo valido.');
+      }
+
+      const fillingBusiness = Boolean(
+        data.businessName.trim() || data.slug.trim() || data.whatsapp.trim()
+      );
+      if (fillingBusiness && (!data.businessName.trim() || !data.slug.trim() || !data.whatsapp.trim())) {
+        throw new Error('Completa el negocio o dejalo vacio si te invitaron.');
       }
 
       const user =
-        current && !current.isAnonymous ? current : await registerOwner(data.email, data.password);
+        current && !current.isAnonymous ? current : await registerOwner(data.email);
+      createdNewAuth.current = !alreadySignedIn;
       const email = user.email ?? data.email;
+
+      async function finishWithSetupEmail() {
+        await sendPasswordSetupEmail(email);
+        await signOutOwner();
+        setKitchen(null);
+        setLegacyBusiness(null);
+        setPendingEmail(null);
+        setAuthNotice(
+          `Te enviamos un correo a ${email}. Abre el link para activar tu cuenta y crear tu contraseña, luego inicia sesion.`
+        );
+      }
 
       const existing = await resolveKitchenAccess(user.uid, email, setAuthNotice);
       if (existing) {
+        if (createdNewAuth.current) {
+          await finishWithSetupEmail();
+          return;
+        }
         setKitchen(kitchenFromAccess(existing.business, existing.role));
         setLegacyBusiness(null);
         setPendingEmail(null);
@@ -169,13 +214,17 @@ function AppContent() {
 
       if (legacyBusiness?.id) {
         await claimMembership(legacyBusiness.id, user.uid, email);
+        if (createdNewAuth.current) {
+          await finishWithSetupEmail();
+          return;
+        }
         setKitchen(kitchenFromAccess(legacyBusiness, 'owner'));
         setLegacyBusiness(null);
         setPendingEmail(null);
         return;
       }
 
-      if (!data.businessName.trim() || !data.slug.trim() || !data.whatsapp.trim()) {
+      if (!fillingBusiness) {
         throw new Error('Si eres el dueno, completa el negocio. Si te invitaron, usa el mismo correo de la invitacion.');
       }
 
@@ -186,10 +235,24 @@ function AppContent() {
         address: data.address.trim() || undefined,
       });
       await claimMembership(business.id!, user.uid, email);
+      if (createdNewAuth.current) {
+        await finishWithSetupEmail();
+        return;
+      }
       setKitchen(kitchenFromAccess(business, 'owner'));
       setLegacyBusiness(null);
       setPendingEmail(null);
     } catch (err) {
+      if (createdNewAuth.current) {
+        const email = data.email.trim();
+        try {
+          if (email) await sendPasswordSetupEmail(email);
+          await signOutOwner();
+          setPendingEmail(null);
+        } catch {
+          // Si el alta ya creo el usuario, que use Olvidaste tu contraseña.
+        }
+      }
       setAuthError(describeAuthError(err));
     } finally {
       setLoading(false);
@@ -235,6 +298,7 @@ function AppContent() {
           notice={authNotice}
           onSignIn={handleSignIn}
           onSignUp={handleSignUp}
+          onForgotPassword={handleForgotPassword}
           onSignOut={handleSignOut}
         />
         <StatusBar style="dark" />
