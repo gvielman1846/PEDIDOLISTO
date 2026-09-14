@@ -151,6 +151,16 @@ export async function updateBusinessPaymentSettings(
   });
 }
 
+/** Es el numero al que el catalogo web manda los pedidos. */
+export async function updateBusinessWhatsApp(
+  businessId: string,
+  whatsapp: string
+): Promise<void> {
+  const digits = whatsapp.replace(/\D/g, '');
+  if (digits.length < 10) throw new Error('Escribe los 10 digitos de tu WhatsApp.');
+  await updateDoc(doc(getDb(), 'businesses', businessId), { whatsapp: digits });
+}
+
 export async function getCategories(businessId: string): Promise<Category[]> {
   const db = getDb();
   const q = query(

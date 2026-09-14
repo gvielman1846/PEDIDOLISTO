@@ -30,6 +30,7 @@ import {
   saveUserPhone,
   setActiveKitchen,
   updateBusinessPaymentSettings,
+  updateBusinessWhatsApp,
   writeOwnerMembership,
   type KitchenAccess,
 } from '@pedido-listo/firebase';
@@ -42,6 +43,7 @@ interface KitchenData {
   businessId: string;
   ownerId?: string;
   role: StaffRole;
+  whatsapp?: string;
   paymentMethods?: PaymentMethod[];
   clabe?: string;
 }
@@ -71,6 +73,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
 
   const [kitchens, setKitchens] = useState<KitchenAccess[]>([]);
   const [phone, setPhone] = useState('');
+  const [whatsapp, setWhatsapp] = useState(kitchen.whatsapp ?? '');
   const [newEmail, setNewEmail] = useState(accountEmail);
   const [currentPassword, setCurrentPassword] = useState('');
   const [nextPassword, setNextPassword] = useState('');
@@ -82,7 +85,8 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
   useEffect(() => {
     setMethods(enabledPaymentMethods(kitchen));
     setClabe(kitchen.clabe ?? '');
-  }, [kitchen.businessId, kitchen.clabe, kitchen.paymentMethods]);
+    setWhatsapp(kitchen.whatsapp ?? '');
+  }, [kitchen.businessId, kitchen.clabe, kitchen.paymentMethods, kitchen.whatsapp]);
 
   useEffect(() => {
     if (!uid) return;
@@ -148,6 +152,23 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       setNotice('Celular guardado.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar el celular.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveWhatsApp() {
+    if (!isOwner) return;
+    setSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await updateBusinessWhatsApp(kitchen.businessId, whatsapp);
+      const digits = whatsapp.replace(/\D/g, '');
+      onKitchenChange({ whatsapp: digits });
+      Alert.alert('Listo', 'Los pedidos nuevos llegaran a ese WhatsApp.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el WhatsApp.');
     } finally {
       setSaving(false);
     }
@@ -283,6 +304,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       {isOwner && (
         <>
           <Text style={styles.label}>Numero de celular</Text>
+          <Text style={styles.fieldHint}>Solo para contactarte. No recibe los pedidos.</Text>
           <TextInput
             style={styles.input}
             value={phone}
@@ -293,6 +315,22 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
           />
           <TouchableOpacity style={styles.btnSecondary} onPress={savePhone} disabled={saving}>
             <Text style={styles.btnSecondaryText}>Guardar celular</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.section}>WhatsApp de pedidos</Text>
+          <Text style={styles.sectionHint}>
+            Aqui llegan los pedidos de tu catalogo. Escribe los 10 digitos.
+          </Text>
+          <TextInput
+            style={styles.input}
+            value={whatsapp}
+            onChangeText={setWhatsapp}
+            placeholder="Ej. 3312345678"
+            placeholderTextColor={colors.muted}
+            keyboardType="phone-pad"
+          />
+          <TouchableOpacity style={styles.btn} onPress={saveWhatsApp} disabled={saving}>
+            <Text style={styles.btnText}>Guardar WhatsApp de pedidos</Text>
           </TouchableOpacity>
         </>
       )}
@@ -488,6 +526,7 @@ const styles = StyleSheet.create({
   btnSecondaryText: { color: colors.text, fontWeight: '700', fontSize: 16 },
   section: { fontSize: 18, fontWeight: '800', color: colors.text, marginTop: 28 },
   sectionHint: { fontSize: 13, color: colors.muted, marginTop: 4, marginBottom: 12, lineHeight: 18 },
+  fieldHint: { fontSize: 12, color: colors.muted, marginBottom: 6 },
   kitchenRow: {
     flexDirection: 'row',
     alignItems: 'center',

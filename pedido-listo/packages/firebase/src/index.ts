@@ -14,6 +14,7 @@ export {
   getBusinessesByOwnerId,
   createOwnerBusiness,
   updateBusinessPaymentSettings,
+  updateBusinessWhatsApp,
   getCategories,
   subscribeToCategories,
   ensureDefaultCategories,
