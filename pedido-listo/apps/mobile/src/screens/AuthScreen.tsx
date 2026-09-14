@@ -125,7 +125,8 @@ export function AuthScreen({
               style={styles.input}
               value={email}
               onChangeText={setEmail}
-              placeholder="tu@correo.com"
+              placeholder="Ej. maria.lopez@gmail.com"
+              placeholderTextColor={colors.muted}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -139,7 +140,8 @@ export function AuthScreen({
                   style={styles.input}
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="Tu contraseña"
+                  placeholder="Ej. minimo 8 caracteres"
+                  placeholderTextColor={colors.muted}
                   secureTextEntry
                   autoCapitalize="none"
                   autoComplete="current-password"
@@ -166,19 +168,21 @@ export function AuthScreen({
             <Text style={styles.hint}>
               Solo el dueno llena esto. El equipo entra despues con una invitacion.
             </Text>
-            <Text style={styles.label}>Nombre de la cocina</Text>
+            <Text style={styles.label}>Nombre del negocio</Text>
             <TextInput
               style={styles.input}
               value={businessName}
               onChangeText={setBusinessName}
-              placeholder="Ej. Cocina de Maria"
+              placeholder="Ej. Taqueria El Guero"
+              placeholderTextColor={colors.muted}
             />
             <Text style={styles.label}>Link del catalogo</Text>
             <TextInput
               style={styles.input}
               value={slug}
               onChangeText={setSlug}
-              placeholder="cocina-de-maria"
+              placeholder="Ej. taqueria-el-guero"
+              placeholderTextColor={colors.muted}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -187,7 +191,8 @@ export function AuthScreen({
               style={styles.input}
               value={whatsapp}
               onChangeText={setWhatsapp}
-              placeholder="5512345678"
+              placeholder="Ej. 3312345678"
+              placeholderTextColor={colors.muted}
               keyboardType="phone-pad"
             />
             <Text style={styles.label}>Colonia / direccion</Text>
@@ -195,7 +200,8 @@ export function AuthScreen({
               style={styles.input}
               value={address}
               onChangeText={setAddress}
-              placeholder="Alta California, Tlajomulco"
+              placeholder="Ej. Alta California Residencial, Tlajomulco"
+              placeholderTextColor={colors.muted}
             />
           </>
         )}

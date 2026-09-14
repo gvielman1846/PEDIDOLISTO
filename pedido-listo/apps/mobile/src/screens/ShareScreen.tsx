@@ -243,6 +243,8 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
         style={styles.input}
         value={newEmail}
         onChangeText={setNewEmail}
+        placeholder="Ej. maria.lopez@gmail.com"
+        placeholderTextColor={colors.muted}
         keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
@@ -252,7 +254,8 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
         style={styles.input}
         value={currentPassword}
         onChangeText={setCurrentPassword}
-        placeholder="La necesitas para cambiar correo o contraseña"
+        placeholder="Ej. la que usas para entrar"
+        placeholderTextColor={colors.muted}
         secureTextEntry
         autoCapitalize="none"
       />
@@ -265,7 +268,8 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
         style={styles.input}
         value={nextPassword}
         onChangeText={setNextPassword}
-        placeholder="Minimo 8 caracteres"
+        placeholder="Ej. minimo 8 caracteres"
+        placeholderTextColor={colors.muted}
         secureTextEntry
         autoCapitalize="none"
       />
@@ -278,7 +282,8 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
         style={styles.input}
         value={phone}
         onChangeText={setPhone}
-        placeholder="5512345678"
+        placeholder="Ej. 3312345678"
+        placeholderTextColor={colors.muted}
         keyboardType="phone-pad"
       />
       <TouchableOpacity style={styles.btnSecondary} onPress={savePhone} disabled={saving}>
@@ -308,19 +313,21 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       })}
 
       <Text style={styles.section}>Agregar negocio</Text>
-      <Text style={styles.label}>Nombre de la cocina</Text>
+      <Text style={styles.label}>Nombre del negocio</Text>
       <TextInput
         style={styles.input}
         value={newName}
         onChangeText={setNewName}
-        placeholder="Ej. Cocina del centro"
+        placeholder="Ej. Taqueria El Guero"
+        placeholderTextColor={colors.muted}
       />
       <Text style={styles.label}>Link del catalogo</Text>
       <TextInput
         style={styles.input}
         value={newSlug}
         onChangeText={setNewSlug}
-        placeholder="cocina-del-centro"
+        placeholder="Ej. taqueria-el-guero"
+        placeholderTextColor={colors.muted}
         autoCapitalize="none"
         autoCorrect={false}
       />
@@ -329,7 +336,8 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
         style={styles.input}
         value={newWhatsapp}
         onChangeText={setNewWhatsapp}
-        placeholder="5512345678"
+        placeholder="Ej. 3312345678"
+        placeholderTextColor={colors.muted}
         keyboardType="phone-pad"
       />
       <Text style={styles.label}>Colonia / direccion</Text>
@@ -337,7 +345,8 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
         style={styles.input}
         value={newAddress}
         onChangeText={setNewAddress}
-        placeholder="Alta California, Tlajomulco"
+        placeholder="Ej. Alta California Residencial, Tlajomulco"
+        placeholderTextColor={colors.muted}
       />
       <TouchableOpacity style={styles.btn} onPress={() => void addKitchen()} disabled={saving}>
         <Text style={styles.btnText}>Crear y cargar este negocio</Text>
@@ -393,7 +402,8 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
                 style={styles.input}
                 value={clabe}
                 onChangeText={(value) => setClabe(normalizeClabe(value))}
-                placeholder="18 digitos"
+                placeholder="Ej. 012345678901234567"
+                placeholderTextColor={colors.muted}
                 keyboardType="number-pad"
                 maxLength={18}
               />
