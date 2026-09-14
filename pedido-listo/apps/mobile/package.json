@@ -19,7 +19,9 @@
   },
   "devDependencies": {
     "@expo/ngrok": "^4.1.3",
+    "@types/node": "^24.13.3",
     "@types/react": "~19.2.2",
+    "tsx": "^4.23.13",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -28,6 +30,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "test": "tsx --test src/**/*.test.ts",
     "eas-build-pre-install": "npm install --prefix ../..",
     "build:apk": "eas build -p android --profile preview",
     "build:aab": "eas build -p android --profile production"

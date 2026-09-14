@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Pressable,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Order, StaffRole } from '@pedido-listo/types';
@@ -14,6 +16,13 @@ import { PAYMENT_METHOD_LABELS } from '@pedido-listo/types';
 import { updateOrderStatus } from '@pedido-listo/firebase';
 import { openInGoogleMaps, openInWaze } from '../lib/maps';
 import { callCustomer, formatCustomerPhone, whatsappCustomer } from '../lib/contact';
+import {
+  getPairedPrinters,
+  getSavedPrinter,
+  printToPrinter,
+  type PairedPrinter,
+} from '../lib/printer';
+import { buildOrderReceipt } from '../lib/receipt';
 import {
   formatMXN,
   formatTime,
@@ -27,13 +36,22 @@ import { colors } from '../theme';
 interface Props {
   order: Order | null;
   businessId: string;
+  businessName: string;
   role: StaffRole;
   onClose: () => void;
 }
 
-export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
+export function OrderDetailSheet({ order, businessId, businessName, role, onClose }: Props) {
   const [updating, setUpdating] = useState(false);
+  const [printing, setPrinting] = useState(false);
+  const [savedPrinter, setSavedPrinter] = useState<PairedPrinter | null>(null);
+  const [printers, setPrinters] = useState<PairedPrinter[]>([]);
+  const [printerPickerOpen, setPrinterPickerOpen] = useState(false);
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    void getSavedPrinter().then(setSavedPrinter);
+  }, []);
 
   if (!order) return null;
 
@@ -49,6 +67,59 @@ export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
       // keep sheet open on error
     } finally {
       setUpdating(false);
+    }
+  }
+
+  async function printWith(printer: PairedPrinter) {
+    if (!order) return;
+    setPrinting(true);
+    setPrinterPickerOpen(false);
+    try {
+      await printToPrinter(printer, buildOrderReceipt(order, businessName));
+      setSavedPrinter(printer);
+      Alert.alert('Pedido impreso', `Se envio a ${printer.name}.`);
+    } catch (error) {
+      Alert.alert(
+        'No se pudo imprimir',
+        error instanceof Error ? error.message : 'Revisa la impresora e intenta de nuevo.'
+      );
+    } finally {
+      setPrinting(false);
+    }
+  }
+
+  async function handlePrint(changePrinter = false) {
+    setPrinting(true);
+    try {
+      const paired = await getPairedPrinters();
+      if (paired.length === 0) {
+        Alert.alert(
+          'No hay impresoras emparejadas',
+          'Enciende la impresora y emparejala primero desde Ajustes > Bluetooth del telefono.'
+        );
+        return;
+      }
+
+      const availableSaved = !changePrinter && savedPrinter
+        ? paired.find((item) => item.address === savedPrinter.address)
+        : null;
+      if (availableSaved) {
+        await printWith(availableSaved);
+        return;
+      }
+      if (paired.length === 1) {
+        await printWith(paired[0]);
+        return;
+      }
+      setPrinters(paired);
+      setPrinterPickerOpen(true);
+    } catch (error) {
+      Alert.alert(
+        'No se pudo buscar la impresora',
+        error instanceof Error ? error.message : 'Revisa que Bluetooth este encendido.'
+      );
+    } finally {
+      setPrinting(false);
     }
   }
 
@@ -153,6 +224,25 @@ export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
             )}
           </ScrollView>
 
+          <TouchableOpacity
+            style={styles.printBtn}
+            onPress={() => handlePrint()}
+            disabled={printing}
+          >
+            {printing ? (
+              <ActivityIndicator color={colors.accent} />
+            ) : (
+              <Text style={styles.printText}>🖨 Imprimir</Text>
+            )}
+          </TouchableOpacity>
+          {savedPrinter && !printing && (
+            <TouchableOpacity onPress={() => handlePrint(true)} style={styles.changePrinterBtn}>
+              <Text style={styles.changePrinterText}>
+                Impresora: {savedPrinter.name} · Cambiar
+              </Text>
+            </TouchableOpacity>
+          )}
+
           {nextStatus && (
             <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: getStatusColor(nextStatus) }]}
@@ -169,6 +259,39 @@ export function OrderDetailSheet({ order, businessId, role, onClose }: Props) {
             <Text style={styles.closeText}>Cerrar</Text>
           </TouchableOpacity>
         </View>
+
+        <Modal
+          visible={printerPickerOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setPrinterPickerOpen(false)}
+        >
+          <View style={styles.printerOverlay}>
+            <Pressable style={styles.printerBackdrop} onPress={() => setPrinterPickerOpen(false)} />
+            <View style={styles.printerCard}>
+              <Text style={styles.printerTitle}>Selecciona la impresora</Text>
+              <Text style={styles.printerHint}>
+                Se muestran los dispositivos emparejados en Ajustes de Bluetooth.
+              </Text>
+              {printers.map((printer) => (
+                <TouchableOpacity
+                  key={printer.address}
+                  style={styles.printerOption}
+                  onPress={() => printWith(printer)}
+                >
+                  <Text style={styles.printerName}>{printer.name}</Text>
+                  <Text style={styles.printerAddress}>{printer.address}</Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setPrinterPickerOpen(false)}
+              >
+                <Text style={styles.closeText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </Modal>
   );
@@ -266,8 +389,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mapBtnText: { color: colors.accent, fontWeight: '700', fontSize: 13 },
-  actionBtn: {
+  printBtn: {
     marginTop: 20,
+    minHeight: 54,
+    borderWidth: 2,
+    borderColor: colors.accent,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  printText: { color: colors.accent, fontWeight: '800', fontSize: 16 },
+  changePrinterBtn: { paddingVertical: 8, alignItems: 'center' },
+  changePrinterText: { color: colors.muted, fontSize: 12, textAlign: 'center' },
+  actionBtn: {
+    marginTop: 10,
     borderRadius: 14,
     padding: 16,
     alignItems: 'center',
@@ -275,4 +410,34 @@ const styles = StyleSheet.create({
   actionText: { color: 'white', fontWeight: '700', fontSize: 16 },
   closeBtn: { marginTop: 10, padding: 12, alignItems: 'center' },
   closeText: { color: colors.muted, fontWeight: '600' },
+  printerOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  printerBackdrop: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  printerCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    padding: 20,
+    maxHeight: '75%',
+  },
+  printerTitle: { fontSize: 20, fontWeight: '800', color: colors.text },
+  printerHint: { fontSize: 13, color: colors.muted, lineHeight: 19, marginTop: 5, marginBottom: 12 },
+  printerOption: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 8,
+  },
+  printerName: { color: colors.text, fontWeight: '700', fontSize: 15 },
+  printerAddress: { color: colors.muted, fontSize: 12, marginTop: 2 },
 });

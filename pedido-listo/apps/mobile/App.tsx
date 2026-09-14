@@ -386,8 +386,20 @@ function KitchenTabs({
             </TouchableOpacity>
           </>
         )}
-        {tab === 'orders' && <OrdersScreen businessId={kitchen.businessId} role={kitchen.role} />}
-        {tab === 'calendar' && <CalendarScreen businessId={kitchen.businessId} role={kitchen.role} />}
+        {tab === 'orders' && (
+          <OrdersScreen
+            businessId={kitchen.businessId}
+            businessName={kitchen.name}
+            role={kitchen.role}
+          />
+        )}
+        {tab === 'calendar' && (
+          <CalendarScreen
+            businessId={kitchen.businessId}
+            businessName={kitchen.name}
+            role={kitchen.role}
+          />
+        )}
         {tab === 'menu' && kitchen.role !== 'delivery' && (
           <MenuScreen
             products={products}

@@ -28,6 +28,7 @@ import { colors } from '../theme';
 
 interface ListProps {
   businessId: string;
+  businessName: string;
   role: StaffRole;
   orders: Order[];
   loading: boolean;
@@ -43,6 +44,7 @@ interface ListProps {
 
 export function OrderList({
   businessId,
+  businessName,
   role,
   orders,
   loading,
@@ -136,6 +138,7 @@ export function OrderList({
       <OrderDetailSheet
         order={selected}
         businessId={businessId}
+        businessName={businessName}
         role={role}
         onClose={() => setSelected(null)}
       />
@@ -143,7 +146,15 @@ export function OrderList({
   );
 }
 
-export function OrdersScreen({ businessId, role }: { businessId: string; role: StaffRole }) {
+export function OrdersScreen({
+  businessId,
+  businessName,
+  role,
+}: {
+  businessId: string;
+  businessName: string;
+  role: StaffRole;
+}) {
   const { orders, loading, error } = useOrders(businessId);
   const todayOrders = useMemo(
     () => orders.filter((order) => isSameLocalDay(order.createdAt)),
@@ -153,6 +164,7 @@ export function OrdersScreen({ businessId, role }: { businessId: string; role: S
   return (
     <OrderList
       businessId={businessId}
+      businessName={businessName}
       role={role}
       orders={todayOrders}
       loading={loading}
@@ -208,7 +220,15 @@ function CashCutCard({ orders }: { orders: Order[] }) {
   );
 }
 
-export function CalendarScreen({ businessId, role }: { businessId: string; role: StaffRole }) {
+export function CalendarScreen({
+  businessId,
+  businessName,
+  role,
+}: {
+  businessId: string;
+  businessName: string;
+  role: StaffRole;
+}) {
   const { orders, loading, error } = useOrders(businessId);
   const today = dayKey();
   const days = useMemo(() => {
@@ -238,6 +258,7 @@ export function CalendarScreen({ businessId, role }: { businessId: string; role:
   return (
     <OrderList
       businessId={businessId}
+      businessName={businessName}
       role={role}
       orders={dayOrders}
       loading={loading}
