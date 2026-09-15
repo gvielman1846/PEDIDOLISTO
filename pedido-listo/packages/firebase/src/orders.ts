@@ -10,7 +10,7 @@ import {
   type DocumentData,
   type Unsubscribe,
 } from 'firebase/firestore';
-import type { CartItem, CheckoutData, Order, OrderStatus } from '@pedido-listo/types';
+import type { CartItem, CheckoutData, Order, OrderStatus, PaymentStatus } from '@pedido-listo/types';
 import { getDb } from './config';
 
 function mapOrder(id: string, data: DocumentData): Order {
@@ -27,6 +27,7 @@ function mapOrder(id: string, data: DocumentData): Order {
     address: data.address,
     note: data.note,
     paymentMethod: data.paymentMethod,
+    paymentStatus: data.paymentStatus as PaymentStatus | undefined,
     status: data.status ?? 'nuevo',
     source: data.source ?? 'whatsapp',
     createdAt: data.createdAt?.toDate?.() ?? data.createdAt,
@@ -55,8 +56,9 @@ export async function createOrder(businessId: string, input: CreateOrderInput): 
     address: input.checkout.address ?? null,
     note: input.checkout.note ?? null,
     paymentMethod: input.checkout.paymentMethod,
+    paymentStatus: input.checkout.paymentMethod === 'tarjeta' ? 'pending' : null,
     status: 'nuevo',
-    source: 'whatsapp',
+    source: input.checkout.paymentMethod === 'tarjeta' ? 'catalog' : 'whatsapp',
     createdAt: serverTimestamp(),
   });
   return ref.id;

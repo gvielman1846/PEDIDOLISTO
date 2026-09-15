@@ -6,6 +6,12 @@ import EscPosPrinter, {
 
 const SAVED_PRINTER_KEY = '@pedidolisto/esc-pos-printer';
 
+function friendlyPrinterError(error: unknown, fallback: string): Error {
+  const message = error instanceof Error ? error.message : fallback;
+  const nativeCause = message.match(/java\.lang\.Exception:\s*([^\n]+)/)?.[1];
+  return new Error(nativeCause ?? message);
+}
+
 async function requestBluetoothPermission(): Promise<void> {
   if (Platform.OS !== 'android') {
     throw new Error('La impresion Bluetooth esta disponible en Android.');
@@ -28,7 +34,11 @@ async function requestBluetoothPermission(): Promise<void> {
 
 export async function getPairedPrinters(): Promise<PairedPrinter[]> {
   await requestBluetoothPermission();
-  return EscPosPrinter.getPairedDevices();
+  try {
+    return await EscPosPrinter.getPairedDevices();
+  } catch (error) {
+    throw friendlyPrinterError(error, 'No se pudieron buscar impresoras.');
+  }
 }
 
 export async function getSavedPrinter(): Promise<PairedPrinter | null> {
@@ -47,7 +57,11 @@ export async function printToPrinter(
   receipt: string
 ): Promise<void> {
   await requestBluetoothPermission();
-  await EscPosPrinter.print(printer.address, receipt);
+  try {
+    await EscPosPrinter.print(printer.address, receipt);
+  } catch (error) {
+    throw friendlyPrinterError(error, 'No se pudo imprimir el pedido.');
+  }
   await AsyncStorage.setItem(SAVED_PRINTER_KEY, JSON.stringify(printer));
 }
 

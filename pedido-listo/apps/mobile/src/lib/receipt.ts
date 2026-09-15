@@ -73,7 +73,13 @@ export function buildOrderReceipt(
   lines.push(...columns('TOTAL', money(order.total)));
 
   if (order.paymentMethod) {
-    lines.push(...wrapReceiptText(`Pago: ${PAYMENT_METHOD_LABELS[order.paymentMethod]}`));
+    lines.push(
+      ...wrapReceiptText(
+        `Pago: ${PAYMENT_METHOD_LABELS[order.paymentMethod]}${
+          order.paymentMethod === 'tarjeta' && order.paymentStatus === 'paid' ? ' PAGADO' : ''
+        }`
+      )
+    );
   }
   lines.push(`Entrega: ${order.deliveryType === 'delivery' ? 'A domicilio' : 'Recoger'}`);
   if (order.address) lines.push(...wrapReceiptText(`Direccion: ${order.address}`));

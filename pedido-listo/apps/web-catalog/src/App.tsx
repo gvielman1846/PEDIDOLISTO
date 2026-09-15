@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Business, Category, Product } from '@pedido-listo/types';
 import { BusinessHero } from './components/BusinessHero';
 import { CategoryFilter } from './components/CategoryFilter';
@@ -7,6 +7,13 @@ import { CartBar } from './components/CartBar';
 import { CheckoutSheet } from './components/CheckoutSheet';
 import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
+import {
+  clearPaymentQuery,
+  clearPendingCheckout,
+  paymentReturnFromUrl,
+  readPendingCheckout,
+} from './lib/checkoutSession';
+import { buildOrderMessage, buildWhatsAppUrl, openWhatsApp } from '@pedido-listo/whatsapp';
 import './App.css';
 
 interface ReadyCatalog {
@@ -20,6 +27,14 @@ function CatalogView({ business, categories, products, source }: ReadyCatalog) {
   const [activeCat, setActiveCat] = useState('Todos');
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const { quantities, items, itemCount, subtotal, updateQuantity } = useCart(products);
+  const [paymentReturn, setPaymentReturn] = useState<'ok' | 'error' | 'pendiente' | null>(null);
+
+  useEffect(() => {
+    const result = paymentReturnFromUrl();
+    if (!result) return;
+    setPaymentReturn(result);
+    clearPaymentQuery();
+  }, []);
 
   const categoryNames = useMemo(
     () => ['Todos', ...categories.map((c) => c.name)],
@@ -82,6 +97,57 @@ function CatalogView({ business, categories, products, source }: ReadyCatalog) {
             open={checkoutOpen}
             onClose={() => setCheckoutOpen(false)}
           />
+
+          {paymentReturn && (
+            <div
+              className="overlay open"
+              onClick={(e) => e.target === e.currentTarget && setPaymentReturn(null)}
+            >
+              <div className="sheet" role="dialog">
+                <h2>
+                  {paymentReturn === 'ok'
+                    ? 'Pago listo'
+                    : paymentReturn === 'pendiente'
+                      ? 'Pago pendiente'
+                      : 'No se completo el pago'}
+                </h2>
+                <p className="sheet__subtitle">
+                  {paymentReturn === 'ok'
+                    ? 'El negocio ya recibio tu pedido. Si quieres, avisa tambien por WhatsApp.'
+                    : paymentReturn === 'pendiente'
+                      ? 'Mercado Pago sigue confirmando el cobro. El negocio vera el pedido cuando se apruebe.'
+                      : 'No se cobro. El negocio no va a preparar este pedido.'}
+                </p>
+                {paymentReturn === 'ok' && business.whatsapp && (
+                  <button
+                    type="button"
+                    className="btn-wa"
+                    onClick={() => {
+                      const stored = readPendingCheckout();
+                      if (stored) {
+                        const message = buildOrderMessage(business, stored.items, stored.checkout);
+                        openWhatsApp(buildWhatsAppUrl(business.whatsapp, message));
+                      }
+                      clearPendingCheckout();
+                      setPaymentReturn(null);
+                    }}
+                  >
+                    Enviar por WhatsApp
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => {
+                    if (paymentReturn !== 'ok') clearPendingCheckout();
+                    setPaymentReturn(null);
+                  }}
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

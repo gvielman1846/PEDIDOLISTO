@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Order } from '@pedido-listo/types';
+import { isOrderVisibleToStaff } from '@pedido-listo/types';
 import { subscribeToOrders } from '@pedido-listo/firebase';
 
 export function useOrders(businessId: string) {
@@ -12,7 +13,7 @@ export function useOrders(businessId: string) {
     const unsubscribe = subscribeToOrders(
       businessId,
       (next) => {
-        setOrders(next);
+        setOrders(next.filter(isOrderVisibleToStaff));
         setLoading(false);
         setError(null);
       },

@@ -44,6 +44,8 @@ function mapBusiness(id: string, data: DocumentData): Business {
       ? data.paymentMethods.filter((method: PaymentMethod) => PAYMENT_METHODS.includes(method))
       : undefined,
     clabe: data.clabe ?? undefined,
+    mercadoPagoConnected: Boolean(data.mercadoPagoConnected),
+    mercadoPagoNickname: data.mercadoPagoNickname ?? undefined,
     createdAt: data.createdAt?.toDate?.() ?? data.createdAt,
   };
 }

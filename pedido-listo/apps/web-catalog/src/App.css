@@ -600,6 +600,22 @@ body {
   filter: brightness(1.05);
 }
 
+.btn-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #009ee3;
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
 .btn-ghost {
   background: transparent;
   border: none;

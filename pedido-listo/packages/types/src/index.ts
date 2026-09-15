@@ -37,12 +37,16 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
 };
 
 export function enabledPaymentMethods(
-  business: Pick<Business, 'paymentMethods'>
+  business: Pick<Business, 'paymentMethods' | 'mercadoPagoConnected'>
 ): PaymentMethod[] {
   const selected = business.paymentMethods?.filter((method) =>
     PAYMENT_METHODS.includes(method)
   );
-  return selected && selected.length > 0 ? selected : [...PAYMENT_METHODS];
+  const methods = selected && selected.length > 0 ? selected : [...PAYMENT_METHODS];
+  if (!business.mercadoPagoConnected) {
+    return methods.filter((method) => method !== 'tarjeta');
+  }
+  return methods;
 }
 
 export function normalizeClabe(value: string): string {
@@ -65,6 +69,8 @@ export interface Business {
   plan: Plan;
   paymentMethods?: PaymentMethod[];
   clabe?: string;
+  mercadoPagoConnected?: boolean;
+  mercadoPagoNickname?: string;
   createdAt?: Date;
 }
 
@@ -96,6 +102,8 @@ export interface CartItem {
 
 export type DeliveryType = 'delivery' | 'pickup';
 
+export type PaymentStatus = 'pending' | 'paid' | 'failed';
+
 export interface CheckoutData {
   customerName: string;
   customerPhone: string;
@@ -103,6 +111,7 @@ export interface CheckoutData {
   address?: string;
   note?: string;
   paymentMethod: PaymentMethod;
+  paymentStatus?: PaymentStatus;
 }
 
 export const DEMO_BUSINESS_ID = 'demo';
@@ -131,7 +140,16 @@ export interface Order {
   address?: string;
   note?: string;
   paymentMethod?: PaymentMethod;
+  paymentStatus?: PaymentStatus;
   status: OrderStatus;
   createdAt?: Date;
-  source: 'whatsapp';
+  source: 'whatsapp' | 'catalog';
+}
+
+/** La cocina solo ve pedidos con tarjeta cuando Mercado Pago ya confirmo el cobro. */
+export function isOrderVisibleToStaff(
+  order: Pick<Order, 'paymentMethod' | 'paymentStatus'>
+): boolean {
+  if (order.paymentMethod !== 'tarjeta') return true;
+  return order.paymentStatus === 'paid';
 }

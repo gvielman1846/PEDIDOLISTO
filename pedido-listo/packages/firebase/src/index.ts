@@ -49,6 +49,11 @@ export {
 } from './auth';
 export { deleteOwnerAccount } from './account';
 export {
+  startMercadoPagoOAuth,
+  disconnectMercadoPago,
+  createCardCheckout,
+} from './mercadopago';
+export {
   getMembership,
   writeOwnerMembership,
   listMembers,

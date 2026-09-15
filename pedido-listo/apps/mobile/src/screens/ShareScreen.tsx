@@ -9,13 +9,14 @@ import {
   Switch,
   TextInput,
   ActivityIndicator,
+  Linking,
+  AppState,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import {
   PAYMENT_METHOD_LABELS,
   PAYMENT_METHODS,
   STAFF_ROLE_LABELS,
-  enabledPaymentMethods,
   normalizeClabe,
   type PaymentMethod,
   type StaffRole,
@@ -25,12 +26,15 @@ import {
   changeAccountPassword,
   createOwnerBusiness,
   deleteOwnerAccount,
+  disconnectMercadoPago,
+  getBusinessById,
   getFirebaseAuth,
   getUserProfile,
   listUserKitchens,
   saveUserPhone,
   setActiveKitchen,
   signOutOwner,
+  startMercadoPagoOAuth,
   toMxMobileDigits,
   updateBusinessPaymentSettings,
   updateBusinessWhatsApp,
@@ -49,6 +53,8 @@ interface KitchenData {
   whatsapp?: string;
   paymentMethods?: PaymentMethod[];
   clabe?: string;
+  mercadoPagoConnected?: boolean;
+  mercadoPagoNickname?: string;
 }
 
 interface Props {
@@ -67,7 +73,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
     kitchen.role === 'owner' && (!kitchen.ownerId || kitchen.ownerId === uid);
 
   const [methods, setMethods] = useState<PaymentMethod[]>(() =>
-    enabledPaymentMethods(kitchen)
+    kitchen.paymentMethods?.length ? kitchen.paymentMethods : [...PAYMENT_METHODS]
   );
   const [clabe, setClabe] = useState(kitchen.clabe ?? '');
   const [saving, setSaving] = useState(false);
@@ -89,10 +95,10 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
   const [newAddress, setNewAddress] = useState('');
 
   useEffect(() => {
-    setMethods(enabledPaymentMethods(kitchen));
+    setMethods(kitchen.paymentMethods?.length ? kitchen.paymentMethods : [...PAYMENT_METHODS]);
     setClabe(kitchen.clabe ?? '');
     setWhatsapp(kitchen.whatsapp ?? '');
-  }, [kitchen.businessId, kitchen.clabe, kitchen.paymentMethods, kitchen.whatsapp]);
+  }, [kitchen.businessId, kitchen.clabe, kitchen.paymentMethods, kitchen.whatsapp, kitchen.mercadoPagoConnected]);
 
   useEffect(() => {
     if (!uid) return;
@@ -106,6 +112,70 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       }
     })();
   }, [uid, kitchen.businessId]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state !== 'active' || !isOwner) return;
+      void getBusinessById(kitchen.businessId).then((business) => {
+        if (!business) return;
+        onKitchenChange({
+          mercadoPagoConnected: business.mercadoPagoConnected,
+          mercadoPagoNickname: business.mercadoPagoNickname,
+          paymentMethods: business.paymentMethods,
+        });
+      });
+    });
+    return () => sub.remove();
+  }, [isOwner, kitchen.businessId, onKitchenChange]);
+
+  async function connectMercadoPago() {
+    if (!isOwner) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const url = await startMercadoPagoOAuth(kitchen.businessId);
+      await Linking.openURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo abrir Mercado Pago.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function unlinkMercadoPago() {
+    if (!isOwner) return;
+    Alert.alert(
+      'Desconectar Mercado Pago',
+      'Dejaran de aparecer pagos con tarjeta en tu catalogo.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Desconectar',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              setSaving(true);
+              setError(null);
+              try {
+                await disconnectMercadoPago(kitchen.businessId);
+                onKitchenChange({
+                  mercadoPagoConnected: false,
+                  mercadoPagoNickname: undefined,
+                  paymentMethods: methods.filter((method) => method !== 'tarjeta'),
+                });
+                setMethods((current) => current.filter((method) => method !== 'tarjeta'));
+                Alert.alert('Listo', 'Mercado Pago quedó desconectado.');
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'No se pudo desconectar Mercado Pago.');
+              } finally {
+                setSaving(false);
+              }
+            })();
+          },
+        },
+      ]
+    );
+  }
 
   async function copyLink() {
     await Clipboard.setStringAsync(catalogUrl);
@@ -129,6 +199,10 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
     const digits = normalizeClabe(clabe);
     if (methods.includes('transferencia') && digits.length !== 18) {
       setError('Para Transferencia escribe una CLABE de 18 digitos.');
+      return;
+    }
+    if (methods.includes('tarjeta') && !kitchen.mercadoPagoConnected) {
+      setError('Para Tarjeta conecta primero tu cuenta de Mercado Pago.');
       return;
     }
 
@@ -476,9 +550,28 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
             <Text style={styles.btnSecondaryText}>📸 Compartir en Instagram</Text>
           </TouchableOpacity>
 
+          <Text style={styles.section}>Mercado Pago</Text>
+          <Text style={styles.sectionHint}>
+            Conecta tu cuenta para cobrar con tarjeta. El dinero cae directo ahi, no pasa por PedidoListo.
+          </Text>
+          {kitchen.mercadoPagoConnected ? (
+            <>
+              <Text style={styles.fieldHint}>
+                Conectado{kitchen.mercadoPagoNickname ? `: ${kitchen.mercadoPagoNickname}` : '.'}
+              </Text>
+              <TouchableOpacity style={styles.btnSecondary} onPress={unlinkMercadoPago} disabled={saving}>
+                <Text style={styles.btnSecondaryText}>Desconectar Mercado Pago</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity style={styles.btn} onPress={connectMercadoPago} disabled={saving}>
+              {saving ? <ActivityIndicator color="white" /> : <Text style={styles.btnText}>Conectar Mercado Pago</Text>}
+            </TouchableOpacity>
+          )}
+
           <Text style={styles.section}>Metodos de pago</Text>
           <Text style={styles.sectionHint}>
-            Solo los que actives aparecen al cliente. Si elige Transferencia, el WhatsApp lleva tu CLABE.
+            Solo los que actives aparecen al cliente. Tarjeta usa Mercado Pago. Transferencia lleva tu CLABE.
           </Text>
 
           {PAYMENT_METHODS.map((method) => (
@@ -486,7 +579,13 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
               <Text style={styles.methodLabel}>{PAYMENT_METHOD_LABELS[method]}</Text>
               <Switch
                 value={methods.includes(method)}
-                onValueChange={(next) => toggleMethod(method, next)}
+                onValueChange={(next) => {
+                  if (method === 'tarjeta' && next && !kitchen.mercadoPagoConnected) {
+                    Alert.alert('Conecta Mercado Pago', 'Primero conecta tu cuenta para aceptar tarjeta.');
+                    return;
+                  }
+                  toggleMethod(method, next);
+                }}
                 trackColor={{ false: '#fecaca', true: '#bbf7d0' }}
                 thumbColor={methods.includes(method) ? colors.success : colors.danger}
               />

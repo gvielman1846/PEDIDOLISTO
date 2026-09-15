@@ -144,6 +144,7 @@ export function OrderDetailSheet({ order, businessId, businessName, role, onClos
                 <Text style={styles.meta}>
                   {formatTime(order.createdAt)} · {getDeliveryLabel(order)}
                   {order.paymentMethod ? ` · ${PAYMENT_METHOD_LABELS[order.paymentMethod]}` : ''}
+                  {order.paymentMethod === 'tarjeta' && order.paymentStatus === 'paid' ? ' · Pagado' : ''}
                 </Text>
               </View>
               <View style={[styles.badge, { backgroundColor: getStatusColor(order.status) + '22' }]}>

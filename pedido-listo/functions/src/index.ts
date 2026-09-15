@@ -22,6 +22,14 @@ async function deleteRefs(refs: DocumentReference[]): Promise<void> {
  * Borra de forma administrativa la cuenta del dueño y todos sus negocios.
  * La función es idempotente: cada paso se puede repetir si un intento se corta.
  */
+export {
+  startMercadoPagoOAuth,
+  disconnectMercadoPago,
+  mercadoPagoOAuthCallback,
+  createCardCheckout,
+  mercadoPagoWebhook,
+} from './mercadoPago';
+
 export const deleteOwnerAccount = onCall(
   { region: REGION, timeoutSeconds: 540, memory: '512MiB' },
   async (request) => {

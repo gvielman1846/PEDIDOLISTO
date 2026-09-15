@@ -72,7 +72,9 @@ export function buildOrderMessage(
 
   sections.push(
     `*TOTAL: ${formatMXN(total)}*`,
-    `Pago: ${PAYMENT_METHOD_LABELS[checkout.paymentMethod]}`
+    `Pago: ${PAYMENT_METHOD_LABELS[checkout.paymentMethod]}${
+      checkout.paymentMethod === 'tarjeta' && checkout.paymentStatus === 'paid' ? ' (PAGADO)' : ''
+    }`
   );
 
   if (checkout.paymentMethod === 'transferencia' && business.clabe) {
