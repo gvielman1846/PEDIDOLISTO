@@ -15,7 +15,7 @@ class EscPosPrinterModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("EscPosPrinter")
 
-    AsyncFunction("getPairedDevices") Coroutine {
+    AsyncFunction<List<Map<String, String>>>("getPairedDevices") {
       val adapter = bluetoothManager.adapter
         ?: throw Exception("Este telefono no tiene Bluetooth.")
       if (!adapter.isEnabled) {
