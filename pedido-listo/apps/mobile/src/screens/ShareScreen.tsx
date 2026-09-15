@@ -136,7 +136,9 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       const url = await startMercadoPagoOAuth(kitchen.businessId);
       await Linking.openURL(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo abrir Mercado Pago.');
+      const message = err instanceof Error ? err.message : 'No se pudo abrir Mercado Pago.';
+      setError(message);
+      Alert.alert('Mercado Pago', message);
     } finally {
       setSaving(false);
     }
