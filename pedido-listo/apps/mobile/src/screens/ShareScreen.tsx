@@ -37,6 +37,7 @@ import {
   signOutOwner,
   startMercadoPagoOAuth,
   toMxMobileDigits,
+  updateBusinessMinOrder,
   updateBusinessPaymentSettings,
   updateBusinessWhatsApp,
   writeOwnerMembership,
@@ -54,6 +55,7 @@ interface KitchenData {
   whatsapp?: string;
   paymentMethods?: PaymentMethod[];
   clabe?: string;
+  minOrder: number;
   mercadoPagoConnected?: boolean;
   mercadoPagoNickname?: string;
 }
@@ -84,6 +86,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
   const [kitchens, setKitchens] = useState<KitchenAccess[]>([]);
   const [phone, setPhone] = useState('');
   const [whatsapp, setWhatsapp] = useState(kitchen.whatsapp ?? '');
+  const [minOrder, setMinOrder] = useState(String(kitchen.minOrder ?? 0));
   const [newEmail, setNewEmail] = useState(accountEmail);
   const [currentPassword, setCurrentPassword] = useState('');
   const [nextPassword, setNextPassword] = useState('');
@@ -99,7 +102,8 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
     setMethods(kitchen.paymentMethods?.length ? kitchen.paymentMethods : [...PAYMENT_METHODS]);
     setClabe(kitchen.clabe ?? '');
     setWhatsapp(kitchen.whatsapp ?? '');
-  }, [kitchen.businessId, kitchen.clabe, kitchen.paymentMethods, kitchen.whatsapp, kitchen.mercadoPagoConnected]);
+    setMinOrder(String(kitchen.minOrder ?? 0));
+  }, [kitchen.businessId, kitchen.clabe, kitchen.minOrder, kitchen.paymentMethods, kitchen.whatsapp, kitchen.mercadoPagoConnected]);
 
   useEffect(() => {
     if (!uid) return;
@@ -266,6 +270,35 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       Alert.alert('Listo', 'Los pedidos nuevos llegaran a ese WhatsApp.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar el WhatsApp.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveMinOrder() {
+    if (!isOwner) return;
+    const normalized = minOrder.trim().replace(',', '.');
+    const amount = normalized === '' ? 0 : Number(normalized);
+    if (!Number.isFinite(amount) || amount < 0) {
+      setError('Escribe un pedido minimo valido, igual o mayor a $0.');
+      return;
+    }
+    const rounded = Math.round(amount * 100) / 100;
+    setSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await updateBusinessMinOrder(kitchen.businessId, rounded);
+      setMinOrder(String(rounded));
+      onKitchenChange({ minOrder: rounded });
+      Alert.alert(
+        'Pedido minimo actualizado',
+        rounded === 0
+          ? 'Tu catalogo ya no exige un pedido minimo.'
+          : `El pedido minimo ahora es de $${rounded.toFixed(2)} MXN.`
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el pedido minimo.');
     } finally {
       setSaving(false);
     }
@@ -454,6 +487,22 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
           />
           <TouchableOpacity style={styles.btnSecondary} onPress={savePhone} disabled={saving}>
             <Text style={styles.btnSecondaryText}>Guardar celular</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.section}>Pedido minimo</Text>
+          <Text style={styles.sectionHint}>
+            Monto minimo que debe sumar el cliente para poder enviar su pedido. Escribe 0 para no exigir minimo.
+          </Text>
+          <TextInput
+            style={styles.input}
+            value={minOrder}
+            onChangeText={(value) => setMinOrder(value.replace(/[^0-9.,]/g, ''))}
+            placeholder="Ej. 80"
+            placeholderTextColor={colors.muted}
+            keyboardType="decimal-pad"
+          />
+          <TouchableOpacity style={styles.btn} onPress={saveMinOrder} disabled={saving}>
+            <Text style={styles.btnText}>Guardar pedido minimo</Text>
           </TouchableOpacity>
 
           <Text style={styles.section}>WhatsApp de pedidos</Text>

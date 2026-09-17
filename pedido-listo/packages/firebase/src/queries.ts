@@ -153,6 +153,16 @@ export async function updateBusinessPaymentSettings(
   });
 }
 
+export async function updateBusinessMinOrder(
+  businessId: string,
+  minOrder: number
+): Promise<void> {
+  if (!Number.isFinite(minOrder) || minOrder < 0) {
+    throw new Error('El pedido minimo debe ser cero o mayor.');
+  }
+  await updateDoc(doc(getDb(), 'businesses', businessId), { minOrder });
+}
+
 /**
  * Guardamos siempre los 10 digitos nacionales: el link de WhatsApp le agrega
  * el 521 al final. Si se guarda con lada incluida el link queda invalido.

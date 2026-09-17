@@ -59,6 +59,7 @@ interface KitchenData {
   role: StaffRole;
   paymentMethods?: PaymentMethod[];
   clabe?: string;
+  minOrder: number;
   mercadoPagoConnected?: boolean;
   mercadoPagoNickname?: string;
 }
@@ -75,6 +76,7 @@ function kitchenFromAccess(business: Business, role: StaffRole): KitchenData {
     role,
     paymentMethods: business.paymentMethods,
     clabe: business.clabe,
+    minOrder: business.minOrder,
     mercadoPagoConnected: business.mercadoPagoConnected,
     mercadoPagoNickname: business.mercadoPagoNickname,
   };
