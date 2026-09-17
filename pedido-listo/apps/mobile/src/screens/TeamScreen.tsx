@@ -66,6 +66,7 @@ export function TeamScreen({ businessId }: Props) {
         value={email}
         onChangeText={setEmail}
         placeholder="cocinero@correo.com"
+        placeholderTextColor={colors.muted}
         keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
@@ -141,14 +142,14 @@ export function TeamScreen({ businessId }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
-  title: { fontSize: 22, fontWeight: '700', color: colors.text },
+  title: { fontSize: 28, lineHeight: 34, fontWeight: '900', color: colors.text, letterSpacing: -0.7 },
   subtitle: { fontSize: 14, color: colors.muted, marginTop: 8, marginBottom: 16, lineHeight: 20 },
   label: { fontSize: 13, fontWeight: '600', color: colors.muted, marginBottom: 6 },
   input: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 14,
     fontSize: 16,
     color: colors.text,
@@ -168,22 +169,22 @@ const styles = StyleSheet.create({
   error: { color: colors.danger, marginTop: 12, fontSize: 13, lineHeight: 18 },
   button: {
     backgroundColor: colors.accent,
-    borderRadius: 14,
-    padding: 16,
+    borderRadius: 16,
+    padding: 17,
     alignItems: 'center',
     marginTop: 16,
   },
   buttonDisabled: { opacity: 0.7 },
-  buttonText: { color: 'white', fontWeight: '700', fontSize: 16 },
-  section: { fontSize: 16, fontWeight: '800', color: colors.text, marginTop: 28, marginBottom: 8 },
+  buttonText: { color: colors.onAccent, fontWeight: '900', fontSize: 16 },
+  section: { fontSize: 19, fontWeight: '900', color: colors.text, marginTop: 28, marginBottom: 8 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 18,
+    padding: 15,
     marginTop: 8,
     gap: 12,
   },

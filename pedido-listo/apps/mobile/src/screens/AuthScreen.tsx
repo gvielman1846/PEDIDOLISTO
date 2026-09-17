@@ -10,7 +10,8 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors, gradients } from '../theme';
 
 export interface SignUpData {
   email: string;
@@ -81,23 +82,28 @@ export function AuthScreen({
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.emoji}>🍲</Text>
-        <Text style={styles.title}>
-          {pendingEmail
-            ? 'Falta crear tu negocio'
-            : legacyBusinessName
-              ? `Protege ${legacyBusinessName}`
-              : 'PedidoListo'}
-        </Text>
-        <Text style={styles.subtitle}>
-          {pendingEmail
-            ? `Tu cuenta ${pendingEmail} ya existe pero todavia no tiene un negocio. Completa los datos para terminar, o pide la invitacion al dueno.`
-            : legacyBusinessName
-              ? 'Crea una cuenta para conservar este negocio y abrirlo desde cualquier telefono.'
-              : mode === 'signin'
-                ? 'Entra con tu correo y tu contraseña. Si te invitaron, usa el mismo correo de la invitacion.'
-                : 'Crea tu cuenta. Te enviaremos un correo con un link para activarla y elegir tu contraseña.'}
-        </Text>
+        <LinearGradient colors={gradients.subtle} style={styles.intro}>
+          <View style={styles.logoMark}>
+            <Text style={styles.logoText}>P</Text>
+          </View>
+          <Text style={styles.kicker}>TU NEGOCIO, EN MOVIMIENTO</Text>
+          <Text style={styles.title}>
+            {pendingEmail
+              ? 'Falta crear tu negocio'
+              : legacyBusinessName
+                ? `Protege ${legacyBusinessName}`
+                : 'PedidoListo'}
+          </Text>
+          <Text style={styles.subtitle}>
+            {pendingEmail
+              ? `Tu cuenta ${pendingEmail} ya existe pero todavia no tiene un negocio. Completa los datos para terminar, o pide la invitacion al dueno.`
+              : legacyBusinessName
+                ? 'Crea una cuenta para conservar este negocio y abrirlo desde cualquier telefono.'
+                : mode === 'signin'
+                  ? 'Entra con tu correo y tu contraseña. Si te invitaron, usa el mismo correo de la invitacion.'
+                  : 'Crea tu cuenta. Te enviaremos un correo con un link para activarla y elegir tu contraseña.'}
+          </Text>
+        </LinearGradient>
 
         {!pendingEmail && (
           <>
@@ -239,34 +245,53 @@ export function AuthScreen({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  scroll: { padding: 24 },
-  emoji: { fontSize: 46, textAlign: 'center' },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text, textAlign: 'center', marginTop: 10 },
-  subtitle: { fontSize: 14, color: colors.muted, textAlign: 'center', marginTop: 8, marginBottom: 22, lineHeight: 20 },
-  tabs: { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 12, padding: 4, marginBottom: 12 },
-  tab: { flex: 1, padding: 10, borderRadius: 9, alignItems: 'center' },
+  scroll: { padding: 20 },
+  intro: {
+    borderRadius: 28,
+    paddingHorizontal: 24,
+    paddingVertical: 28,
+    alignItems: 'center',
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  logoMark: {
+    width: 58,
+    height: 58,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accent,
+    transform: [{ rotate: '-7deg' }],
+  },
+  logoText: { fontSize: 30, fontWeight: '900', color: colors.onAccent },
+  kicker: { fontSize: 10, letterSpacing: 2, fontWeight: '900', color: colors.accentDark, marginTop: 20 },
+  title: { fontSize: 30, lineHeight: 35, fontWeight: '900', color: colors.text, textAlign: 'center', marginTop: 8 },
+  subtitle: { fontSize: 14, color: colors.muted, textAlign: 'center', marginTop: 10, lineHeight: 20 },
+  tabs: { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 16, padding: 4, marginBottom: 12, borderWidth: 1, borderColor: colors.border },
+  tab: { flex: 1, padding: 11, borderRadius: 12, alignItems: 'center' },
   tabActive: { backgroundColor: colors.accentSoft },
   tabText: { color: colors.muted, fontWeight: '700' },
   tabTextActive: { color: colors.accentDark },
-  section: { fontSize: 16, fontWeight: '800', color: colors.text, marginTop: 22 },
-  label: { fontSize: 13, fontWeight: '600', color: colors.muted, marginBottom: 6, marginTop: 13 },
+  section: { fontSize: 20, fontWeight: '900', color: colors.text, marginTop: 24 },
+  label: { fontSize: 12, fontWeight: '800', color: colors.textSoft, marginBottom: 7, marginTop: 14, letterSpacing: 0.2 },
   input: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.input,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 16,
+    padding: 15,
     fontSize: 16,
     color: colors.text,
   },
   error: { color: colors.danger, fontSize: 13, lineHeight: 18, marginTop: 14 },
-  notice: { color: colors.accentDark, fontSize: 12, lineHeight: 18, marginTop: 12 },
+  notice: { color: colors.success, fontSize: 12, lineHeight: 18, marginTop: 12 },
   hint: { fontSize: 12, color: colors.muted, marginTop: 6, lineHeight: 18 },
   forgotButton: { alignSelf: 'flex-start', paddingVertical: 10 },
   forgotText: { color: colors.accentDark, fontSize: 14, fontWeight: '700' },
-  button: { backgroundColor: colors.accent, borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 24 },
+  button: { backgroundColor: colors.accent, borderRadius: 16, padding: 17, alignItems: 'center', marginTop: 24 },
   buttonDisabled: { opacity: 0.65 },
-  buttonText: { color: 'white', fontSize: 16, fontWeight: '800' },
+  buttonText: { color: colors.onAccent, fontSize: 16, fontWeight: '900' },
   linkButton: { padding: 14, alignItems: 'center', marginTop: 4 },
   linkText: { color: colors.muted, fontSize: 14, fontWeight: '700' },
 });

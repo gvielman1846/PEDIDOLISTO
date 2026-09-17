@@ -165,6 +165,7 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
                 value={name}
                 onChangeText={setName}
                 placeholder="Ej. Pozole rojo"
+                placeholderTextColor={colors.muted}
               />
 
               <Text style={styles.label}>Precio en pesos</Text>
@@ -173,6 +174,7 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
                 value={price}
                 onChangeText={setPrice}
                 placeholder="75"
+                placeholderTextColor={colors.muted}
                 keyboardType="numeric"
               />
 
@@ -182,6 +184,7 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Que incluye, tamano, porciones"
+                placeholderTextColor={colors.muted}
                 multiline
               />
 
@@ -230,6 +233,7 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
                 value={emoji}
                 onChangeText={setEmoji}
                 placeholder="🥣"
+                placeholderTextColor={colors.muted}
                 maxLength={4}
               />
 
@@ -264,7 +268,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: colors.scrim,
   },
   overlay: {
     flex: 1,
@@ -272,10 +276,12 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     padding: 20,
     maxHeight: '92%',
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
   },
   scroll: { flexShrink: 1 },
   handle: {
@@ -286,13 +292,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 16,
   },
-  title: { fontSize: 22, fontWeight: '800', color: colors.text, marginBottom: 8 },
+  title: { fontSize: 25, fontWeight: '900', color: colors.text, marginBottom: 8, letterSpacing: -0.4 },
   label: { fontSize: 13, fontWeight: '600', color: colors.muted, marginBottom: 6, marginTop: 14 },
   input: {
-    backgroundColor: colors.bg,
+    backgroundColor: colors.input,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 14,
     fontSize: 16,
     color: colors.text,
@@ -305,7 +311,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.input,
   },
   chipActive: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
   chipText: { fontSize: 14, color: colors.muted, fontWeight: '600' },
@@ -317,7 +323,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.accent,
     borderStyle: 'dashed',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 14,
     alignItems: 'center',
   },
@@ -325,13 +331,13 @@ const styles = StyleSheet.create({
   error: { color: colors.danger, fontSize: 13, marginTop: 14, lineHeight: 18 },
   saveBtn: {
     backgroundColor: colors.accent,
-    borderRadius: 14,
+    borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     marginTop: 18,
   },
   saveBtnDisabled: { opacity: 0.7 },
-  saveText: { color: 'white', fontWeight: '700', fontSize: 16 },
+  saveText: { color: colors.onAccent, fontWeight: '900', fontSize: 16 },
   closeBtn: { marginTop: 10, padding: 12, alignItems: 'center' },
   closeText: { color: colors.muted, fontWeight: '600' },
 });

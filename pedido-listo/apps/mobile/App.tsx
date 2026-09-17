@@ -294,7 +294,7 @@ function AppContent() {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color={colors.accent} />
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
       </View>
     );
   }
@@ -313,7 +313,7 @@ function AppContent() {
           onForgotPassword={handleForgotPassword}
           onSignOut={handleSignOut}
         />
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
       </>
     );
   }
@@ -435,8 +435,12 @@ function KitchenTabs({
 
       <View style={[styles.tabs, { paddingBottom: insets.bottom + 10 }]}>
         {tabs.map(([id, icon, label]) => (
-          <TouchableOpacity key={id} style={styles.tab} onPress={() => setTab(id)}>
-            <Text style={styles.tabIcon}>{icon}</Text>
+          <TouchableOpacity
+            key={id}
+            style={[styles.tab, tab === id && styles.tabActive]}
+            onPress={() => setTab(id)}
+          >
+            <Text style={[styles.tabIcon, tab === id && styles.tabIconActive]}>{icon}</Text>
             <Text
               style={[styles.tabLabel, tab === id && styles.tabLabelActive]}
               numberOfLines={1}
@@ -447,7 +451,7 @@ function KitchenTabs({
           </TouchableOpacity>
         ))}
       </View>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
     </SafeAreaView>
   );
 }
@@ -460,20 +464,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    backgroundColor: colors.surface,
-    paddingTop: 6,
+    backgroundColor: colors.tabBar,
+    paddingTop: 8,
+    paddingHorizontal: 6,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
     paddingHorizontal: 2,
     minHeight: 56,
+    borderRadius: 16,
   },
-  tabIcon: { fontSize: 22 },
-  tabLabel: { fontSize: 9, color: colors.muted, fontWeight: '600', marginTop: 3 },
-  tabLabelActive: { color: colors.accent },
-  signOut: { position: 'absolute', top: 12, right: 20, padding: 8 },
-  signOutText: { color: 'white', fontSize: 12, fontWeight: '700' },
+  tabActive: { backgroundColor: colors.accentSoft },
+  tabIcon: { fontSize: 20, opacity: 0.62 },
+  tabIconActive: { opacity: 1 },
+  tabLabel: { fontSize: 9, color: colors.muted, fontWeight: '700', marginTop: 4 },
+  tabLabelActive: { color: colors.accentDark },
+  signOut: {
+    position: 'absolute',
+    top: 12,
+    right: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: 'rgba(9,9,11,0.52)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  signOutText: { color: colors.text, fontSize: 11, fontWeight: '800' },
 });

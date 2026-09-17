@@ -21,7 +21,7 @@ export function getStatusColor(status: OrderStatus): string {
     case 'nuevo':
       return colors.accent;
     case 'preparando':
-      return '#2563eb';
+      return '#60a5fa';
     case 'listo':
       return colors.success;
     case 'entregado':

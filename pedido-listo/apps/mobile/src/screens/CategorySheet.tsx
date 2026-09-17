@@ -140,13 +140,14 @@ export function CategorySheet({
             value={name}
             onChangeText={setName}
             placeholder="Ej. Desayunos"
+            placeholderTextColor={colors.muted}
             maxLength={40}
           />
           {error && <Text style={styles.error}>{error}</Text>}
 
           <TouchableOpacity style={styles.saveButton} onPress={save} disabled={saving}>
             {saving ? (
-              <ActivityIndicator color="white" />
+              <ActivityIndicator color={colors.onAccent} />
             ) : (
               <Text style={styles.saveText}>{editing ? 'Guardar nombre' : '+ Agregar categoria'}</Text>
             )}
@@ -173,14 +174,16 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     left: 0,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: colors.scrim,
   },
   sheet: {
     maxHeight: '90%',
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     padding: 20,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
   },
   handle: {
     width: 40,
@@ -190,7 +193,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 16,
   },
-  title: { fontSize: 22, fontWeight: '800', color: colors.text },
+  title: { fontSize: 25, fontWeight: '900', color: colors.text, letterSpacing: -0.4 },
   subtitle: { fontSize: 13, color: colors.muted, marginTop: 3, marginBottom: 14 },
   list: { maxHeight: 250 },
   row: {
@@ -206,9 +209,10 @@ const styles = StyleSheet.create({
   deleteText: { color: colors.danger, fontSize: 12, fontWeight: '700' },
   label: { fontSize: 13, fontWeight: '700', color: colors.text, marginTop: 16, marginBottom: 6 },
   input: {
+    backgroundColor: colors.input,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 16,
@@ -218,12 +222,12 @@ const styles = StyleSheet.create({
   saveButton: {
     minHeight: 50,
     backgroundColor: colors.accent,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
   },
-  saveText: { color: 'white', fontWeight: '800', fontSize: 15 },
+  saveText: { color: colors.onAccent, fontWeight: '900', fontSize: 15 },
   cancelButton: { alignItems: 'center', padding: 10 },
   cancelText: { color: colors.accent, fontWeight: '700' },
   closeButton: { alignItems: 'center', padding: 12 },
