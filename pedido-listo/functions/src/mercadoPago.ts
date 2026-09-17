@@ -3,7 +3,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { HttpsError, onCall, onRequest } from 'firebase-functions/v2/https';
 
 const REGION = 'us-central1';
-const MP_AUTH = 'https://auth.mercadopago.com.mx/authorization';
+const MP_AUTH = 'https://auth.mercadopago.com/authorization';
 const MP_API = 'https://api.mercadopago.com';
 
 function env(name: string, fallback = ''): string {

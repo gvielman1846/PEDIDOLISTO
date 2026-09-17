@@ -13,6 +13,7 @@ import {
   AppState,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import * as WebBrowser from 'expo-web-browser';
 import {
   PAYMENT_METHOD_LABELS,
   PAYMENT_METHODS,
@@ -134,7 +135,20 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
     setError(null);
     try {
       const url = await startMercadoPagoOAuth(kitchen.businessId);
-      await Linking.openURL(url);
+      // Chrome Custom Tabs: el navegador de Samsung bloquea el reCAPTCHA de Mercado Pago.
+      try {
+        await WebBrowser.openBrowserAsync(url);
+      } catch {
+        await Linking.openURL(url);
+      }
+      const business = await getBusinessById(kitchen.businessId);
+      if (business) {
+        onKitchenChange({
+          mercadoPagoConnected: business.mercadoPagoConnected,
+          mercadoPagoNickname: business.mercadoPagoNickname,
+          paymentMethods: business.paymentMethods,
+        });
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'No se pudo abrir Mercado Pago.';
       setError(message);
