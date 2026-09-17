@@ -11,7 +11,7 @@ function env(name: string, fallback = ''): string {
 }
 
 function catalogBaseUrl(): string {
-  return env('CATALOG_BASE_URL', 'https://pedidolisto-jet.vercel.app').replace(/\/$/, '');
+  return env('CATALOG_BASE_URL', 'https://pedidolisto.mx').replace(/\/$/, '');
 }
 
 type CheckoutItem = { productId: string; name: string; price: number; quantity: number };

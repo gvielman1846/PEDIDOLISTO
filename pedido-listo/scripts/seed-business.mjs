@@ -143,6 +143,6 @@ for (const entry of businesses) {
 console.log('\n=== Cocineras listas ===\n');
 for (const result of results) {
   console.log(`• ${result.businessId}`);
-  console.log(`  Catalogo: https://pedidolisto-jet.vercel.app${result.catalogUrl}`);
+  console.log(`  Catalogo: https://pedidolisto.mx${result.catalogUrl}`);
   console.log(`  Local:    http://localhost:5173${result.catalogUrl}\n`);
 }

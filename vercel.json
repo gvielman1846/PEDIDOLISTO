@@ -3,5 +3,19 @@
   "installCommand": "cd pedido-listo && npm install",
   "buildCommand": "cd pedido-listo && npm run build --workspace=web-catalog",
   "outputDirectory": "pedido-listo/apps/web-catalog/dist",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "pedidolisto-jet.vercel.app" }],
+      "destination": "https://pedidolisto.mx/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.pedidolisto.mx" }],
+      "destination": "https://pedidolisto.mx/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

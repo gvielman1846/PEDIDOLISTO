@@ -1,4 +1,4 @@
-export const CATALOG_BASE_URL = 'https://pedidolisto-jet.vercel.app';
+export const CATALOG_BASE_URL = 'https://pedidolisto.mx';
 
 export function buildCatalogUrl(slug: string): string {
   return `${CATALOG_BASE_URL}/${slug}`;
