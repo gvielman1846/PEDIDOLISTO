@@ -466,6 +466,7 @@
 .marketing-final h2 { max-width: 750px; margin-top: 14px; }
 .marketing-final p { max-width: 580px; margin-top: 18px; color: rgba(255, 255, 255, 0.8); }
 .marketing-final .marketing-eyebrow { color: rgba(255, 255, 255, 0.75); }
+.marketing-final__note { display: block; max-width: 580px; margin-top: 20px; color: rgba(255, 255, 255, 0.72); }
 .marketing-final .marketing-actions { flex-direction: column; min-width: 220px; }
 
 .marketing-footer {

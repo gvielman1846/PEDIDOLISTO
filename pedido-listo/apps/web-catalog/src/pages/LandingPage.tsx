@@ -184,6 +184,9 @@ export function LandingPage() {
             <span className="marketing-eyebrow">TU NEGOCIO, EN MOVIMIENTO</span>
             <h2>Tu próxima venta puede empezar con un link.</h2>
             <p>Crea tu cuenta, publica tus productos y convierte conversaciones en pedidos organizados.</p>
+            <small className="marketing-final__note">
+              Al instalar, abre la app y vuelve a abrirla para recibir la versión más reciente.
+            </small>
           </div>
           <div className="marketing-actions">
             <a className="marketing-btn marketing-btn--light" href={APK_URL}>Descargar PedidoListo</a>
