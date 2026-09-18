@@ -108,8 +108,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setMode = (next: ThemeMode) => {
-    setModeState(next);
-    void AsyncStorage.setItem(THEME_STORAGE_KEY, next);
+    void AsyncStorage.setItem(THEME_STORAGE_KEY, next)
+      .then(() => setModeState(next))
+      .catch(() => setModeState(next));
   };
 
   const value = useMemo(
