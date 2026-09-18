@@ -50,6 +50,12 @@ export {
 } from './auth';
 export { deleteOwnerAccount } from './account';
 export {
+  getPlatformStats,
+  listPlatformUsers,
+  setPlatformUserDisabled,
+} from './admin';
+export type { PlatformStats, PlatformUser, PlatformUsersPage } from './admin';
+export {
   startMercadoPagoOAuth,
   disconnectMercadoPago,
   createCardCheckout,

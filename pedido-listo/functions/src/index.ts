@@ -29,6 +29,11 @@ export {
   createCardCheckout,
   mercadoPagoWebhook,
 } from './mercadoPago';
+export {
+  getPlatformStats,
+  listPlatformUsers,
+  setPlatformUserDisabled,
+} from './admin';
 
 export const deleteOwnerAccount = onCall(
   { region: REGION, timeoutSeconds: 540, memory: '512MiB' },
