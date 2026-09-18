@@ -6,6 +6,7 @@ import { ProductCard } from './components/ProductCard';
 import { CartBar } from './components/CartBar';
 import { CheckoutSheet } from './components/CheckoutSheet';
 import { HelpPage } from './pages/HelpPage';
+import { LandingPage } from './pages/LandingPage';
 import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
 import {
@@ -205,6 +206,7 @@ function CatalogApp() {
 
 function App() {
   const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+  if (!path) return <LandingPage />;
   if (path === 'ayuda') return <HelpPage />;
   return <CatalogApp />;
 }
