@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import {
@@ -29,7 +29,7 @@ import { TeamScreen } from './src/screens/TeamScreen';
 import { initFirebase } from './src/lib/firebase';
 import { useProducts } from './src/hooks/useProducts';
 import { slugify } from './src/lib/catalog';
-import { colors } from './src/theme';
+import { ThemeProvider, useTheme, type ThemeColors } from './src/theme';
 
 type Tab = 'home' | 'orders' | 'calendar' | 'menu' | 'share' | 'team';
 
@@ -84,13 +84,17 @@ function kitchenFromAccess(business: Business, role: StaffRole): KitchenData {
 
 export default function App() {
   return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-      <AppContent />
-    </SafeAreaProvider>
+    <ThemeProvider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <AppContent />
+      </SafeAreaProvider>
+    </ThemeProvider>
   );
 }
 
 function AppContent() {
+  const { colors, mode } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [kitchen, setKitchen] = useState<KitchenData | null>(null);
   const [legacyBusiness, setLegacyBusiness] = useState<Business | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
@@ -294,7 +298,7 @@ function AppContent() {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color={colors.accent} />
-        <StatusBar style="light" />
+        <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       </View>
     );
   }
@@ -313,7 +317,7 @@ function AppContent() {
           onForgotPassword={handleForgotPassword}
           onSignOut={handleSignOut}
         />
-        <StatusBar style="light" />
+        <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       </>
     );
   }
@@ -342,6 +346,8 @@ function KitchenTabs({
   onKitchenChange: (patch: Partial<KitchenData>) => void;
   onSelectKitchen: (access: KitchenAccess) => void;
 }) {
+  const { colors, mode } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [tab, setTab] = useState<Tab>('orders');
   const insets = useSafeAreaInsets();
   // Si el negocio ya guarda su ownerId, ese dato manda sobre el rol de la sesion.
@@ -451,12 +457,12 @@ function KitchenTabs({
           </TouchableOpacity>
         ))}
       </View>
-      <StatusBar style="light" />
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   safe: { flex: 1, backgroundColor: colors.bg },
   content: { flex: 1 },

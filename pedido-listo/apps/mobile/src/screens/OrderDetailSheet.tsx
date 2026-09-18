@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -31,7 +31,7 @@ import {
   getStatusColor,
   ORDER_STATUS_LABELS,
 } from '../lib/orders';
-import { colors } from '../theme';
+import { useTheme, type ThemeColors } from '../theme';
 
 interface Props {
   order: Order | null;
@@ -42,6 +42,8 @@ interface Props {
 }
 
 export function OrderDetailSheet({ order, businessId, businessName, role, onClose }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [updating, setUpdating] = useState(false);
   const [printing, setPrinting] = useState(false);
   const [savedPrinter, setSavedPrinter] = useState<PairedPrinter | null>(null);
@@ -147,8 +149,8 @@ export function OrderDetailSheet({ order, businessId, businessName, role, onClos
                   {order.paymentMethod === 'tarjeta' && order.paymentStatus === 'paid' ? ' · Pagado' : ''}
                 </Text>
               </View>
-              <View style={[styles.badge, { backgroundColor: getStatusColor(order.status) + '22' }]}>
-                <Text style={[styles.badgeText, { color: getStatusColor(order.status) }]}>
+              <View style={[styles.badge, { backgroundColor: getStatusColor(order.status, colors) + '22' }]}>
+                <Text style={[styles.badgeText, { color: getStatusColor(order.status, colors) }]}>
                   {ORDER_STATUS_LABELS[order.status]}
                 </Text>
               </View>
@@ -246,7 +248,7 @@ export function OrderDetailSheet({ order, businessId, businessName, role, onClos
 
           {nextStatus && (
             <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: getStatusColor(nextStatus) }]}
+              style={[styles.actionBtn, { backgroundColor: getStatusColor(nextStatus, colors) }]}
               onPress={handleAdvanceStatus}
               disabled={updating}
             >
@@ -298,7 +300,7 @@ export function OrderDetailSheet({ order, businessId, businessName, role, onClos
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',

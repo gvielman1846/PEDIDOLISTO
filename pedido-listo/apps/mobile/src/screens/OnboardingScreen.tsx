@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { colors } from '../theme';
+import { useTheme, type ThemeColors } from '../theme';
 
 interface Props {
   onComplete: (data: {
@@ -23,6 +23,8 @@ interface Props {
 }
 
 export function OnboardingScreen({ onComplete, loading = false, error = null }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [catalogSlug, setCatalogSlug] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
@@ -94,7 +96,7 @@ export function OnboardingScreen({ onComplete, loading = false, error = null }: 
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   scroll: { padding: 24, paddingTop: 48 },
   emoji: { fontSize: 48, textAlign: 'center', marginBottom: 12 },

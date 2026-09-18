@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import type { Category, Product } from '@pedido-listo/types';
 import type { NewProductDraft } from '../hooks/useProducts';
 import { resolveProductImageUrl } from '../lib/catalog';
-import { colors } from '../theme';
+import { useTheme, type ThemeColors } from '../theme';
 
 const FALLBACK_CATEGORY = 'general';
 
@@ -31,6 +31,8 @@ interface Props {
 }
 
 export function NewProductSheet({ visible, categories, product, onClose, onSubmit }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const isEditing = Boolean(product);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
@@ -260,7 +262,7 @@ export function NewProductSheet({ visible, categories, product, onClose, onSubmi
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   flex: { flex: 1 },
   backdrop: {
     position: 'absolute',

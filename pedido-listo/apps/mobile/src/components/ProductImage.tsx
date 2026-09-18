@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import type { Product } from '@pedido-listo/types';
 import { resolveProductImageUrl } from '../lib/catalog';
-import { colors } from '../theme';
+import { useTheme, type ThemeColors } from '../theme';
 
 interface Props {
   product: Product;
@@ -11,6 +11,8 @@ interface Props {
 }
 
 export function ProductImage({ product, size = 52 }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [failed, setFailed] = useState(false);
   const url = resolveProductImageUrl(product.imageUrl);
   const box = { width: size, height: size, borderRadius: 12 };
@@ -35,7 +37,7 @@ export function ProductImage({ product, size = 52 }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   placeholder: {
     backgroundColor: colors.accentSoft,
     alignItems: 'center',

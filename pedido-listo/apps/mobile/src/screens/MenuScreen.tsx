@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { ProductImage } from '../components/ProductImage';
 import { CategorySheet } from './CategorySheet';
 import { NewProductSheet } from './NewProductSheet';
 import type { NewProductDraft } from '../hooks/useProducts';
-import { colors } from '../theme';
+import { useTheme, type ThemeColors } from '../theme';
 
 interface Props {
   products: Product[];
@@ -46,6 +46,8 @@ export function MenuScreen({
   onRemoveProduct,
   canEditMenu,
 }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [managingCategories, setManagingCategories] = useState(false);
@@ -198,7 +200,7 @@ export function MenuScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, padding: 20, paddingTop: 12 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   title: { fontSize: 28, lineHeight: 34, fontWeight: '900', color: colors.text, letterSpacing: -0.7 },

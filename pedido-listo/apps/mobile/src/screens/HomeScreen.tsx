@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { STAFF_ROLE_LABELS, type StaffRole } from '@pedido-listo/types';
-import { colors, gradients } from '../theme';
+import { useTheme, type ThemeColors } from '../theme';
 
 interface KitchenData {
   name: string;
@@ -18,6 +19,8 @@ interface Props {
 }
 
 export function HomeScreen({ kitchen, productCount, role, onNavigate }: Props) {
+  const { colors, gradients } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const canManageMenu = role === 'owner' || role === 'kitchen';
   const canShare = role === 'owner';
   const canInvite = role === 'owner';
@@ -104,7 +107,7 @@ export function HomeScreen({ kitchen, productCount, role, onNavigate }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 32 },
   hero: {

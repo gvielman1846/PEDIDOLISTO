@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -44,7 +44,7 @@ import {
   type KitchenAccess,
 } from '@pedido-listo/firebase';
 import { buildCatalogUrl, slugify } from '../lib/catalog';
-import { colors } from '../theme';
+import { useTheme, type ThemeColors } from '../theme';
 
 interface KitchenData {
   name: string;
@@ -68,6 +68,8 @@ interface Props {
 }
 
 export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKitchen }: Props) {
+  const { colors, mode, setMode } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const uid = getFirebaseAuth().currentUser?.uid;
   const slug = kitchen.slug ?? 'cocina-chef-cueto';
   const catalogUrl = buildCatalogUrl(slug);
@@ -433,6 +435,31 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       <Text style={styles.title}>Perfil</Text>
       <Text style={styles.subtitle}>Tu cuenta y los negocios de este correo</Text>
 
+      <Text style={styles.section}>Apariencia</Text>
+      <Text style={styles.sectionHint}>
+        Elige los colores de la app. La funcionalidad y las degradaciones son iguales en ambos temas.
+      </Text>
+      <View style={styles.themePicker}>
+        <TouchableOpacity
+          style={[styles.themeOption, mode === 'normal' && styles.themeOptionActive]}
+          onPress={() => setMode('normal')}
+        >
+          <View style={[styles.themePreview, styles.themePreviewNormal]} />
+          <Text style={[styles.themeOptionText, mode === 'normal' && styles.themeOptionTextActive]}>
+            Normal
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.themeOption, mode === 'dark' && styles.themeOptionActive]}
+          onPress={() => setMode('dark')}
+        >
+          <View style={[styles.themePreview, styles.themePreviewDark]} />
+          <Text style={[styles.themeOptionText, mode === 'dark' && styles.themeOptionTextActive]}>
+            Oscuro
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <Text style={styles.section}>Cuenta</Text>
       <Text style={styles.label}>Correo</Text>
       <TextInput
@@ -734,11 +761,30 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
   title: { fontSize: 28, lineHeight: 34, fontWeight: '900', color: colors.text, letterSpacing: -0.7 },
   subtitle: { fontSize: 14, color: colors.muted, marginTop: 3, marginBottom: 14 },
+  themePicker: { flexDirection: 'row', gap: 10, marginBottom: 8 },
+  themeOption: {
+    flex: 1,
+    minHeight: 58,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  themeOptionActive: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+  themePreview: { width: 24, height: 24, borderRadius: 12, borderWidth: 3 },
+  themePreviewNormal: { backgroundColor: '#ffffff', borderColor: '#c2410c' },
+  themePreviewDark: { backgroundColor: '#15151b', borderColor: '#a855f7' },
+  themeOptionText: { color: colors.muted, fontSize: 15, fontWeight: '800' },
+  themeOptionTextActive: { color: colors.accentDark },
   qrPlaceholder: {
     backgroundColor: colors.surface,
     borderRadius: 24,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Category } from '@pedido-listo/types';
-import { colors } from '../theme';
+import { useTheme, type ThemeColors } from '../theme';
 
 const BASE_CATEGORY_IDS = new Set(['antojitos', 'platos', 'bebidas', 'postres']);
 
@@ -33,6 +33,8 @@ export function CategorySheet({
   onEdit,
   onRemove,
 }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const [editing, setEditing] = useState<Category | null>(null);
   const [name, setName] = useState('');
@@ -166,7 +168,7 @@ export function CategorySheet({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end' },
   backdrop: {
     position: 'absolute',

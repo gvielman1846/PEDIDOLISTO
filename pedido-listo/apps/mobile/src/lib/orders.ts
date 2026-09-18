@@ -5,7 +5,7 @@ import {
   type OrderStatus,
   type StaffRole,
 } from '@pedido-listo/types';
-import { colors } from '../theme';
+import type { ThemeColors } from '../theme';
 
 export function formatTime(date?: Date): string {
   if (!date) return '--:--';
@@ -16,12 +16,12 @@ export function formatMXN(amount: number): string {
   return `$${amount.toLocaleString('es-MX')}`;
 }
 
-export function getStatusColor(status: OrderStatus): string {
+export function getStatusColor(status: OrderStatus, colors: ThemeColors): string {
   switch (status) {
     case 'nuevo':
       return colors.accent;
     case 'preparando':
-      return '#60a5fa';
+      return colors.preparing;
     case 'listo':
       return colors.success;
     case 'entregado':

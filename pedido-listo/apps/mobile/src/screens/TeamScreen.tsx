@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -10,13 +10,15 @@ import {
 import type { StaffRole, TeamInvite, TeamMember } from '@pedido-listo/types';
 import { STAFF_ROLE_LABELS } from '@pedido-listo/types';
 import { cancelInvite, inviteStaff, listInvites, listMembers, removeMember } from '@pedido-listo/firebase';
-import { colors } from '../theme';
+import { useTheme, type ThemeColors } from '../theme';
 
 interface Props {
   businessId: string;
 }
 
 export function TeamScreen({ businessId }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [invites, setInvites] = useState<TeamInvite[]>([]);
   const [email, setEmail] = useState('');
@@ -139,7 +141,7 @@ export function TeamScreen({ businessId }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 20, paddingBottom: 40 },
   title: { fontSize: 28, lineHeight: 34, fontWeight: '900', color: colors.text, letterSpacing: -0.7 },

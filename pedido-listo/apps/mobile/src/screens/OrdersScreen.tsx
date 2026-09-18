@@ -24,7 +24,7 @@ import {
 } from '../lib/orders';
 import { formatCustomerPhone } from '../lib/contact';
 import { OrderDetailSheet } from './OrderDetailSheet';
-import { colors } from '../theme';
+import { useTheme, type ThemeColors } from '../theme';
 
 interface ListProps {
   businessId: string;
@@ -56,6 +56,8 @@ export function OrderList({
   header,
   compact = false,
 }: ListProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [selected, setSelected] = useState<Order | null>(null);
 
   if (loading) {
@@ -93,8 +95,8 @@ export function OrderList({
               <>
                 <View style={styles.cardTop}>
                   <Text style={styles.customerCompact}>{item.customerName}</Text>
-                  <View style={[styles.badge, { backgroundColor: getStatusColor(item.status) + '22' }]}>
-                    <Text style={[styles.badgeText, { color: getStatusColor(item.status) }]}>
+                  <View style={[styles.badge, { backgroundColor: getStatusColor(item.status, colors) + '22' }]}>
+                    <Text style={[styles.badgeText, { color: getStatusColor(item.status, colors) }]}>
                       {ORDER_STATUS_LABELS[item.status]}
                     </Text>
                   </View>
@@ -110,8 +112,8 @@ export function OrderList({
               <>
                 <View style={styles.cardTop}>
                   <Text style={styles.time}>{formatTime(item.createdAt)}</Text>
-                  <View style={[styles.badge, { backgroundColor: getStatusColor(item.status) + '22' }]}>
-                    <Text style={[styles.badgeText, { color: getStatusColor(item.status) }]}>
+                  <View style={[styles.badge, { backgroundColor: getStatusColor(item.status, colors) + '22' }]}>
+                    <Text style={[styles.badgeText, { color: getStatusColor(item.status, colors) }]}>
                       {ORDER_STATUS_LABELS[item.status]}
                     </Text>
                   </View>
@@ -179,6 +181,8 @@ export function OrdersScreen({
 }
 
 function CashCutCard({ orders }: { orders: Order[] }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const cut = useMemo(() => summarizeDaySales(orders), [orders]);
 
   return (
@@ -229,6 +233,8 @@ export function CalendarScreen({
   businessName: string;
   role: StaffRole;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { orders, loading, error } = useOrders(businessId);
   const today = dayKey();
   const days = useMemo(() => {
@@ -303,7 +309,7 @@ export function CalendarScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, padding: 20, paddingTop: 12 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   title: { fontSize: 28, lineHeight: 34, fontWeight: '900', color: colors.text, letterSpacing: -0.7 },

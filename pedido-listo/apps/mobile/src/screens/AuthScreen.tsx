@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, gradients } from '../theme';
+import { useTheme, type ThemeColors } from '../theme';
 
 export interface SignUpData {
   email: string;
@@ -45,6 +45,8 @@ export function AuthScreen({
   onForgotPassword,
   onSignOut,
 }: Props) {
+  const { colors, gradients } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [mode, setMode] = useState<'signin' | 'signup'>(
     legacyBusinessName ? 'signup' : 'signin'
   );
@@ -243,7 +245,7 @@ export function AuthScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   scroll: { padding: 20 },
   intro: {
