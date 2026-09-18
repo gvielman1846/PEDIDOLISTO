@@ -67,6 +67,21 @@ interface Props {
   onSelectKitchen: (access: KitchenAccess) => void;
 }
 
+type ProfileSection =
+  | 'appearance'
+  | 'email'
+  | 'password'
+  | 'phone'
+  | 'minOrder'
+  | 'whatsapp'
+  | 'businesses'
+  | 'addBusiness'
+  | 'share'
+  | 'mercadoPago'
+  | 'paymentMethods'
+  | 'clabe'
+  | 'deleteAccount';
+
 export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKitchen }: Props) {
   const { colors, mode, setMode } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -99,6 +114,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
   const [newSlug, setNewSlug] = useState('');
   const [newWhatsapp, setNewWhatsapp] = useState('');
   const [newAddress, setNewAddress] = useState('');
+  const [section, setSection] = useState<ProfileSection | null>(null);
 
   useEffect(() => {
     setMethods(kitchen.paymentMethods?.length ? kitchen.paymentMethods : [...PAYMENT_METHODS]);
@@ -155,6 +171,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
           paymentMethods: business.paymentMethods,
         });
       }
+      setSection(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'No se pudo abrir Mercado Pago.';
       setError(message);
@@ -187,6 +204,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
                 });
                 setMethods((current) => current.filter((method) => method !== 'tarjeta'));
                 Alert.alert('Listo', 'Mercado Pago quedó desconectado.');
+                setSection(null);
               } catch (err) {
                 setError(err instanceof Error ? err.message : 'No se pudo desconectar Mercado Pago.');
               } finally {
@@ -202,6 +220,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
   async function copyLink() {
     await Clipboard.setStringAsync(catalogUrl);
     Alert.alert('Copiado', 'Link copiado al portapapeles');
+    setSection(null);
   }
 
   function toggleMethod(method: PaymentMethod, enabled: boolean) {
@@ -237,6 +256,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       });
       onKitchenChange({ paymentMethods: methods, clabe: digits || undefined });
       Alert.alert('Listo', 'Los metodos de pago ya aparecen en tu catalogo.');
+      setSection(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar.');
     } finally {
@@ -252,6 +272,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
     try {
       await saveUserPhone(uid, phone);
       setNotice('Celular guardado.');
+      setSection(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar el celular.');
     } finally {
@@ -270,6 +291,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       setWhatsapp(digits);
       onKitchenChange({ whatsapp: digits });
       Alert.alert('Listo', 'Los pedidos nuevos llegaran a ese WhatsApp.');
+      setSection(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar el WhatsApp.');
     } finally {
@@ -299,6 +321,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
           ? 'Tu catalogo ya no exige un pedido minimo.'
           : `El pedido minimo ahora es de $${rounded.toFixed(2)} MXN.`
       );
+      setSection(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo guardar el pedido minimo.');
     } finally {
@@ -318,6 +341,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       await changeAccountEmail(newEmail.trim(), currentPassword);
       setCurrentPassword('');
       setNotice(`Te enviamos un correo a ${newEmail.trim()} para confirmar el cambio.`);
+      setSection(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo cambiar el correo.');
     } finally {
@@ -380,6 +404,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       setCurrentPassword('');
       setNextPassword('');
       setNotice('Contraseña actualizada.');
+      setSection(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo cambiar la contraseña.');
     } finally {
@@ -394,6 +419,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
     try {
       await setActiveKitchen(uid, accountEmail, access);
       onSelectKitchen(access);
+      setSection(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo cambiar de negocio.');
     } finally {
@@ -423,6 +449,7 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
       setNewWhatsapp('');
       setNewAddress('');
       onSelectKitchen({ business, role: 'owner' });
+      setSection(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo crear el negocio.');
     } finally {
@@ -430,242 +457,250 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
     }
   }
 
+  const profileItems: Array<{
+    id: ProfileSection;
+    icon: string;
+    title: string;
+    description: string;
+    ownerOnly?: boolean;
+    exactOwnerOnly?: boolean;
+    danger?: boolean;
+  }> = [
+    { id: 'appearance', icon: '◐', title: 'Apariencia', description: 'Tema Normal u Oscuro' },
+    { id: 'email', icon: '✉', title: 'Cambiar correo', description: accountEmail },
+    { id: 'password', icon: '●', title: 'Cambiar contraseña', description: 'Actualiza tu acceso' },
+    { id: 'phone', icon: '☎', title: 'Guardar celular dueño', description: 'Teléfono de contacto', ownerOnly: true },
+    { id: 'minOrder', icon: '$', title: 'Pedido mínimo', description: 'Monto mínimo del catálogo', ownerOnly: true },
+    { id: 'whatsapp', icon: '◉', title: 'WhatsApp de pedidos', description: 'Número que recibe pedidos', ownerOnly: true },
+    { id: 'businesses', icon: '▦', title: 'Negocios', description: 'Selecciona el negocio activo' },
+    { id: 'addBusiness', icon: '+', title: 'Agregar negocio', description: 'Crea otro negocio', ownerOnly: true },
+    { id: 'share', icon: '↗', title: 'Compartir catálogo', description: 'Link público para tus clientes', ownerOnly: true },
+    { id: 'mercadoPago', icon: 'M', title: 'Mercado Pago', description: 'Conecta los cobros con tarjeta', ownerOnly: true },
+    { id: 'paymentMethods', icon: '✓', title: 'Métodos de pago', description: 'Efectivo, transferencia y tarjeta', ownerOnly: true },
+    { id: 'clabe', icon: '#', title: 'CLABE interbancaria', description: 'Cuenta para transferencias', ownerOnly: true },
+    { id: 'deleteAccount', icon: '!', title: 'Eliminar cuenta', description: 'Borrar cuenta y todos sus datos', exactOwnerOnly: true, danger: true },
+  ];
+
+  const visibleItems = profileItems.filter(
+    (item) =>
+      (!item.ownerOnly || isOwner) &&
+      (!item.exactOwnerOnly || (isOwner && kitchen.ownerId === uid))
+  );
+
+  const sectionTitles: Record<ProfileSection, string> = {
+    appearance: 'Apariencia',
+    email: 'Cambiar correo',
+    password: 'Cambiar contraseña',
+    phone: 'Guardar celular dueño',
+    minOrder: 'Pedido mínimo',
+    whatsapp: 'WhatsApp de pedidos',
+    businesses: 'Negocios',
+    addBusiness: 'Agregar negocio',
+    share: 'Compartir catálogo',
+    mercadoPago: 'Mercado Pago',
+    paymentMethods: 'Métodos de pago',
+    clabe: 'CLABE interbancaria',
+    deleteAccount: 'Eliminar cuenta',
+  };
+
+  function openSection(next: ProfileSection) {
+    setError(null);
+    setNotice(null);
+    setSection(next);
+  }
+
+  if (!section) {
+    return (
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Perfil</Text>
+        <Text style={styles.subtitle}>Configura tu cuenta y tu negocio</Text>
+
+        <View style={styles.profileMenu}>
+          {visibleItems.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.profileItem}
+              onPress={() => openSection(item.id)}
+            >
+              <View style={[styles.profileIcon, item.danger && styles.profileIconDanger]}>
+                <Text style={[styles.profileIconText, item.danger && styles.profileTextDanger]}>
+                  {item.icon}
+                </Text>
+              </View>
+              <View style={styles.profileItemCopy}>
+                <Text style={[styles.profileItemTitle, item.danger && styles.profileTextDanger]}>
+                  {item.title}
+                </Text>
+                <Text style={styles.profileItemDescription}>{item.description}</Text>
+              </View>
+              <Text style={styles.profileChevron}>›</Text>
+            </TouchableOpacity>
+          ))}
+
+          <TouchableOpacity
+            style={styles.profileItem}
+            onPress={() => void Linking.openURL('https://pedidolisto.mx/ayuda')}
+          >
+            <View style={styles.profileIcon}>
+              <Text style={styles.profileIconText}>?</Text>
+            </View>
+            <View style={styles.profileItemCopy}>
+              <Text style={styles.profileItemTitle}>Ayuda</Text>
+              <Text style={styles.profileItemDescription}>Guías y respuestas de PedidoListo</Text>
+            </View>
+            <Text style={styles.profileChevron}>↗</Text>
+          </TouchableOpacity>
+        </View>
+
+        {notice && <Text style={styles.notice}>{notice}</Text>}
+        <Text style={styles.footer}>Plan Gratis incluye marca PedidoListo. Pro $99/mes para quitarla.</Text>
+      </ScrollView>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Perfil</Text>
-      <Text style={styles.subtitle}>Tu cuenta y los negocios de este correo</Text>
-
-      <Text style={styles.section}>Apariencia</Text>
-      <Text style={styles.sectionHint}>
-        Elige los colores de la app. La funcionalidad y las degradaciones son iguales en ambos temas.
-      </Text>
-      <View style={styles.themePicker}>
-        <TouchableOpacity
-          style={[styles.themeOption, mode === 'normal' && styles.themeOptionActive]}
-          onPress={() => setMode('normal')}
-        >
-          <View style={[styles.themePreview, styles.themePreviewNormal]} />
-          <Text style={[styles.themeOptionText, mode === 'normal' && styles.themeOptionTextActive]}>
-            Normal
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.themeOption, mode === 'dark' && styles.themeOptionActive]}
-          onPress={() => setMode('dark')}
-        >
-          <View style={[styles.themePreview, styles.themePreviewDark]} />
-          <Text style={[styles.themeOptionText, mode === 'dark' && styles.themeOptionTextActive]}>
-            Oscuro
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.section}>Cuenta</Text>
-      <Text style={styles.label}>Correo</Text>
-      <TextInput
-        style={styles.input}
-        value={newEmail}
-        onChangeText={setNewEmail}
-        placeholder="Ej. maria.lopez@gmail.com"
-        placeholderTextColor={colors.muted}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      <Text style={styles.label}>Contraseña actual</Text>
-      <TextInput
-        style={styles.input}
-        value={currentPassword}
-        onChangeText={setCurrentPassword}
-        placeholder="Ej. la que usas para entrar"
-        placeholderTextColor={colors.muted}
-        secureTextEntry
-        autoCapitalize="none"
-      />
-      <TouchableOpacity style={styles.btn} onPress={saveEmail} disabled={saving}>
-        <Text style={styles.btnText}>Cambiar correo</Text>
+      <TouchableOpacity style={styles.backButton} onPress={() => setSection(null)}>
+        <Text style={styles.backButtonText}>‹ Perfil</Text>
       </TouchableOpacity>
+      <Text style={styles.title}>{sectionTitles[section]}</Text>
 
-      <Text style={styles.label}>Nueva contraseña</Text>
-      <TextInput
-        style={styles.input}
-        value={nextPassword}
-        onChangeText={setNextPassword}
-        placeholder="Ej. minimo 8 caracteres"
-        placeholderTextColor={colors.muted}
-        secureTextEntry
-        autoCapitalize="none"
-      />
-      <TouchableOpacity style={styles.btn} onPress={savePassword} disabled={saving}>
-        <Text style={styles.btnText}>Cambiar contraseña</Text>
-      </TouchableOpacity>
-
-      {isOwner && (
+      {section === 'appearance' && (
         <>
-          <Text style={styles.label}>Numero de celular</Text>
-          <Text style={styles.fieldHint}>Solo para contactarte. No recibe los pedidos.</Text>
-          <TextInput
-            style={styles.input}
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="Ej. 3312345678"
-            placeholderTextColor={colors.muted}
-            keyboardType="phone-pad"
-          />
-          <TouchableOpacity style={styles.btnSecondary} onPress={savePhone} disabled={saving}>
-            <Text style={styles.btnSecondaryText}>Guardar celular</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.section}>Pedido minimo</Text>
-          <Text style={styles.sectionHint}>
-            Monto minimo que debe sumar el cliente para poder enviar su pedido. Escribe 0 para no exigir minimo.
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={minOrder}
-            onChangeText={(value) => setMinOrder(value.replace(/[^0-9.,]/g, ''))}
-            placeholder="Ej. 80"
-            placeholderTextColor={colors.muted}
-            keyboardType="decimal-pad"
-          />
-          <TouchableOpacity style={styles.btn} onPress={saveMinOrder} disabled={saving}>
-            <Text style={styles.btnText}>Guardar pedido minimo</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.section}>WhatsApp de pedidos</Text>
-          <Text style={styles.sectionHint}>
-            Aqui llegan los pedidos de tu catalogo. Escribe los 10 digitos, sin la lada 52.
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={whatsapp}
-            onChangeText={setWhatsapp}
-            placeholder="Ej. 3312345678"
-            placeholderTextColor={colors.muted}
-            keyboardType="phone-pad"
-          />
-          <TouchableOpacity style={styles.btn} onPress={saveWhatsApp} disabled={saving}>
-            <Text style={styles.btnText}>Guardar WhatsApp de pedidos</Text>
+          <Text style={styles.sectionHint}>Elige los colores de la app. El diseño y las degradaciones son iguales.</Text>
+          <View style={styles.themePicker}>
+            <TouchableOpacity
+              style={[styles.themeOption, mode === 'normal' && styles.themeOptionActive]}
+              onPress={() => setMode('normal')}
+            >
+              <View style={[styles.themePreview, styles.themePreviewNormal]} />
+              <Text style={[styles.themeOptionText, mode === 'normal' && styles.themeOptionTextActive]}>Normal</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.themeOption, mode === 'dark' && styles.themeOptionActive]}
+              onPress={() => setMode('dark')}
+            >
+              <View style={[styles.themePreview, styles.themePreviewDark]} />
+              <Text style={[styles.themeOptionText, mode === 'dark' && styles.themeOptionTextActive]}>Oscuro</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.btn} onPress={() => setSection(null)}>
+            <Text style={styles.btnText}>Guardar apariencia</Text>
           </TouchableOpacity>
         </>
       )}
 
-      <Text style={styles.section}>Negocios</Text>
-      <Text style={styles.sectionHint}>
-        Un mismo correo puede tener varios negocios. Toca el que quieres ver en la app.
-      </Text>
-      {kitchens.map((access) => {
-        const active = access.business.id === kitchen.businessId;
-        return (
-          <TouchableOpacity
-            key={access.business.id}
-            style={[styles.kitchenRow, active && styles.kitchenRowActive]}
-            onPress={() => void switchKitchen(access)}
-            disabled={saving}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={styles.kitchenName}>{access.business.name}</Text>
-              <Text style={styles.kitchenMeta}>{STAFF_ROLE_LABELS[access.role]}</Text>
-            </View>
-            <Text style={styles.kitchenPick}>{active ? 'Actual' : 'Cargar'}</Text>
-          </TouchableOpacity>
-        );
-      })}
-
-      {isOwner && (
+      {section === 'email' && (
         <>
-          <Text style={styles.section}>Agregar negocio</Text>
+          <Text style={styles.label}>Nuevo correo</Text>
+          <TextInput style={styles.input} value={newEmail} onChangeText={setNewEmail} placeholder="Ej. maria.lopez@gmail.com" placeholderTextColor={colors.muted} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
+          <Text style={styles.label}>Contraseña actual</Text>
+          <TextInput style={styles.input} value={currentPassword} onChangeText={setCurrentPassword} placeholder="Ej. la que usas para entrar" placeholderTextColor={colors.muted} secureTextEntry autoCapitalize="none" />
+          <TouchableOpacity style={styles.btn} onPress={saveEmail} disabled={saving}><Text style={styles.btnText}>Guardar correo</Text></TouchableOpacity>
+        </>
+      )}
+
+      {section === 'password' && (
+        <>
+          <Text style={styles.label}>Contraseña actual</Text>
+          <TextInput style={styles.input} value={currentPassword} onChangeText={setCurrentPassword} placeholder="Tu contraseña actual" placeholderTextColor={colors.muted} secureTextEntry autoCapitalize="none" />
+          <Text style={styles.label}>Nueva contraseña</Text>
+          <TextInput style={styles.input} value={nextPassword} onChangeText={setNextPassword} placeholder="Mínimo 8 caracteres" placeholderTextColor={colors.muted} secureTextEntry autoCapitalize="none" />
+          <TouchableOpacity style={styles.btn} onPress={savePassword} disabled={saving}><Text style={styles.btnText}>Guardar contraseña</Text></TouchableOpacity>
+        </>
+      )}
+
+      {section === 'phone' && isOwner && (
+        <>
+          <Text style={styles.sectionHint}>Solo para contactarte. Este número no recibe pedidos.</Text>
+          <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="Ej. 3312345678" placeholderTextColor={colors.muted} keyboardType="phone-pad" />
+          <TouchableOpacity style={styles.btn} onPress={savePhone} disabled={saving}><Text style={styles.btnText}>Guardar celular</Text></TouchableOpacity>
+        </>
+      )}
+
+      {section === 'minOrder' && isOwner && (
+        <>
+          <Text style={styles.sectionHint}>Monto mínimo que debe sumar el cliente. Escribe 0 para no exigir mínimo.</Text>
+          <TextInput style={styles.input} value={minOrder} onChangeText={(value) => setMinOrder(value.replace(/[^0-9.,]/g, ''))} placeholder="Ej. 80" placeholderTextColor={colors.muted} keyboardType="decimal-pad" />
+          <TouchableOpacity style={styles.btn} onPress={saveMinOrder} disabled={saving}><Text style={styles.btnText}>Guardar pedido mínimo</Text></TouchableOpacity>
+        </>
+      )}
+
+      {section === 'whatsapp' && isOwner && (
+        <>
+          <Text style={styles.sectionHint}>Aquí llegan los pedidos del catálogo. Escribe los 10 dígitos, sin la lada 52.</Text>
+          <TextInput style={styles.input} value={whatsapp} onChangeText={setWhatsapp} placeholder="Ej. 3312345678" placeholderTextColor={colors.muted} keyboardType="phone-pad" />
+          <TouchableOpacity style={styles.btn} onPress={saveWhatsApp} disabled={saving}><Text style={styles.btnText}>Guardar WhatsApp</Text></TouchableOpacity>
+        </>
+      )}
+
+      {section === 'businesses' && (
+        <>
+          <Text style={styles.sectionHint}>Toca el negocio que quieres administrar en la app.</Text>
+          {kitchens.map((access) => {
+            const active = access.business.id === kitchen.businessId;
+            return (
+              <TouchableOpacity key={access.business.id} style={[styles.kitchenRow, active && styles.kitchenRowActive]} onPress={() => void switchKitchen(access)} disabled={saving || active}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.kitchenName}>{access.business.name}</Text>
+                  <Text style={styles.kitchenMeta}>{STAFF_ROLE_LABELS[access.role]}</Text>
+                </View>
+                <Text style={styles.kitchenPick}>{active ? 'Actual' : 'Cargar'}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </>
+      )}
+
+      {section === 'addBusiness' && isOwner && (
+        <>
           <Text style={styles.label}>Nombre del negocio</Text>
-          <TextInput
-            style={styles.input}
-            value={newName}
-            onChangeText={setNewName}
-            placeholder="Ej. Taqueria El Guero"
-            placeholderTextColor={colors.muted}
-          />
-          <Text style={styles.label}>Link del catalogo</Text>
-          <TextInput
-            style={styles.input}
-            value={newSlug}
-            onChangeText={setNewSlug}
-            placeholder="Ej. taqueria-el-guero"
-            placeholderTextColor={colors.muted}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
+          <TextInput style={styles.input} value={newName} onChangeText={setNewName} placeholder="Ej. Taquería El Güero" placeholderTextColor={colors.muted} />
+          <Text style={styles.label}>Link del catálogo</Text>
+          <TextInput style={styles.input} value={newSlug} onChangeText={setNewSlug} placeholder="Ej. taqueria-el-guero" placeholderTextColor={colors.muted} autoCapitalize="none" autoCorrect={false} />
           <Text style={styles.label}>WhatsApp del negocio</Text>
-          <TextInput
-            style={styles.input}
-            value={newWhatsapp}
-            onChangeText={setNewWhatsapp}
-            placeholder="Ej. 3312345678"
-            placeholderTextColor={colors.muted}
-            keyboardType="phone-pad"
-          />
-          <Text style={styles.label}>Colonia / direccion</Text>
-          <TextInput
-            style={styles.input}
-            value={newAddress}
-            onChangeText={setNewAddress}
-            placeholder="Ej. Alta California Residencial, Tlajomulco"
-            placeholderTextColor={colors.muted}
-          />
-          <TouchableOpacity style={styles.btn} onPress={() => void addKitchen()} disabled={saving}>
-            <Text style={styles.btnText}>Crear y cargar este negocio</Text>
-          </TouchableOpacity>
+          <TextInput style={styles.input} value={newWhatsapp} onChangeText={setNewWhatsapp} placeholder="Ej. 3312345678" placeholderTextColor={colors.muted} keyboardType="phone-pad" />
+          <Text style={styles.label}>Colonia / dirección</Text>
+          <TextInput style={styles.input} value={newAddress} onChangeText={setNewAddress} placeholder="Ej. Alta California, Tlajomulco" placeholderTextColor={colors.muted} />
+          <TouchableOpacity style={styles.btn} onPress={() => void addKitchen()} disabled={saving}><Text style={styles.btnText}>Guardar negocio</Text></TouchableOpacity>
         </>
       )}
 
-      {isOwner && (
+      {section === 'share' && isOwner && (
         <>
-          <Text style={styles.section}>Compartir catálogo</Text>
-          <Text style={styles.subtitle}>Tus clientes piden sin instalar app</Text>
-
+          <Text style={styles.sectionHint}>Tus clientes pueden pedir sin instalar la app.</Text>
           <View style={styles.qrPlaceholder}>
             <Text style={styles.qrEmoji}>📱</Text>
             <Text style={styles.qrText}>QR para mostrador</Text>
-            <Text style={styles.qrHint}>(expo-camera en semana 3)</Text>
+            <Text style={styles.qrHint}>Comparte también el link directo</Text>
           </View>
-
           <View style={styles.linkBox}>
             <Text style={styles.linkLabel}>Tu link público</Text>
-            <Text style={styles.linkUrl} selectable>
-              {catalogUrl}
-            </Text>
+            <Text style={styles.linkUrl} selectable>{catalogUrl}</Text>
           </View>
+          <TouchableOpacity style={styles.btn} onPress={copyLink}><Text style={styles.btnText}>Copiar link</Text></TouchableOpacity>
+        </>
+      )}
 
-          <TouchableOpacity style={styles.btn} onPress={copyLink}>
-            <Text style={styles.btnText}>📋 Copiar link</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnSecondary}>
-            <Text style={styles.btnSecondaryText}>📸 Compartir en Instagram</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.section}>Mercado Pago</Text>
-          <Text style={styles.sectionHint}>
-            Conecta tu cuenta para cobrar con tarjeta. El dinero cae directo ahi, no pasa por PedidoListo.
-          </Text>
+      {section === 'mercadoPago' && isOwner && (
+        <>
+          <Text style={styles.sectionHint}>Conecta tu cuenta para cobrar con tarjeta. El dinero llega directo a tu Mercado Pago.</Text>
           {kitchen.mercadoPagoConnected ? (
             <>
-              <Text style={styles.fieldHint}>
-                Conectado{kitchen.mercadoPagoNickname ? `: ${kitchen.mercadoPagoNickname}` : '.'}
-              </Text>
-              <TouchableOpacity style={styles.btnSecondary} onPress={unlinkMercadoPago} disabled={saving}>
-                <Text style={styles.btnSecondaryText}>Desconectar Mercado Pago</Text>
-              </TouchableOpacity>
+              <Text style={styles.fieldHint}>Conectado{kitchen.mercadoPagoNickname ? `: ${kitchen.mercadoPagoNickname}` : '.'}</Text>
+              <TouchableOpacity style={styles.btnSecondary} onPress={unlinkMercadoPago} disabled={saving}><Text style={styles.btnSecondaryText}>Desconectar Mercado Pago</Text></TouchableOpacity>
             </>
           ) : (
             <TouchableOpacity style={styles.btn} onPress={connectMercadoPago} disabled={saving}>
-              {saving ? <ActivityIndicator color="white" /> : <Text style={styles.btnText}>Conectar Mercado Pago</Text>}
+              {saving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.btnText}>Conectar Mercado Pago</Text>}
             </TouchableOpacity>
           )}
+        </>
+      )}
 
-          <Text style={styles.section}>Metodos de pago</Text>
-          <Text style={styles.sectionHint}>
-            Solo los que actives aparecen al cliente. Tarjeta usa Mercado Pago. Transferencia lleva tu CLABE.
-          </Text>
-
+      {section === 'paymentMethods' && isOwner && (
+        <>
+          <Text style={styles.sectionHint}>Activa únicamente las formas de pago que aceptarás en el catálogo.</Text>
           {PAYMENT_METHODS.map((method) => (
             <View key={method} style={styles.methodRow}>
               <Text style={styles.methodLabel}>{PAYMENT_METHOD_LABELS[method]}</Text>
@@ -683,80 +718,35 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
               />
             </View>
           ))}
-
-          {methods.includes('transferencia') && (
-            <>
-              <Text style={styles.label}>CLABE interbancaria</Text>
-              <TextInput
-                style={styles.input}
-                value={clabe}
-                onChangeText={(value) => setClabe(normalizeClabe(value))}
-                placeholder="Ej. 012345678901234567"
-                placeholderTextColor={colors.muted}
-                keyboardType="number-pad"
-                maxLength={18}
-              />
-            </>
-          )}
-
           <TouchableOpacity style={styles.btn} onPress={savePayments} disabled={saving}>
-            {saving ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.btnText}>Guardar metodos de pago</Text>
-            )}
+            {saving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.btnText}>Guardar métodos de pago</Text>}
           </TouchableOpacity>
         </>
       )}
 
-      {isOwner && kitchen.ownerId === uid && (
+      {section === 'clabe' && isOwner && (
+        <>
+          <Text style={styles.sectionHint}>Escribe los 18 dígitos de la cuenta que recibirá las transferencias.</Text>
+          <TextInput style={styles.input} value={clabe} onChangeText={(value) => setClabe(normalizeClabe(value))} placeholder="Ej. 012345678901234567" placeholderTextColor={colors.muted} keyboardType="number-pad" maxLength={18} />
+          <TouchableOpacity style={styles.btn} onPress={savePayments} disabled={saving}><Text style={styles.btnText}>Guardar CLABE</Text></TouchableOpacity>
+        </>
+      )}
+
+      {section === 'deleteAccount' && isOwner && kitchen.ownerId === uid && (
         <View style={styles.dangerZone}>
-          <Text style={styles.dangerTitle}>Eliminar cuenta</Text>
-          <Text style={styles.dangerHint}>
-            Borra definitivamente tu cuenta y todos tus negocios, productos, fotos,
-            pedidos, clientes, equipo e invitaciones. No se puede deshacer.
-          </Text>
+          <Text style={styles.dangerHint}>Borra definitivamente tu cuenta y todos tus negocios, productos, fotos, pedidos, clientes, equipo e invitaciones. No se puede deshacer.</Text>
           <Text style={styles.label}>Escribe ELIMINAR</Text>
-          <TextInput
-            style={styles.input}
-            value={deleteConfirmation}
-            onChangeText={setDeleteConfirmation}
-            placeholder="ELIMINAR"
-            placeholderTextColor={colors.muted}
-            autoCapitalize="characters"
-            editable={!deletingAccount}
-          />
+          <TextInput style={styles.input} value={deleteConfirmation} onChangeText={setDeleteConfirmation} placeholder="ELIMINAR" placeholderTextColor={colors.muted} autoCapitalize="characters" editable={!deletingAccount} />
           <Text style={styles.label}>Contraseña actual</Text>
-          <TextInput
-            style={styles.input}
-            value={deletePassword}
-            onChangeText={setDeletePassword}
-            placeholder="Confirma tu contraseña"
-            placeholderTextColor={colors.muted}
-            secureTextEntry
-            autoCapitalize="none"
-            editable={!deletingAccount}
-          />
-          <TouchableOpacity
-            style={styles.deleteBtn}
-            onPress={confirmDeleteAccount}
-            disabled={deletingAccount}
-          >
-            {deletingAccount ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.deleteBtnText}>Eliminar cuenta y todos mis datos</Text>
-            )}
+          <TextInput style={styles.input} value={deletePassword} onChangeText={setDeletePassword} placeholder="Confirma tu contraseña" placeholderTextColor={colors.muted} secureTextEntry autoCapitalize="none" editable={!deletingAccount} />
+          <TouchableOpacity style={styles.deleteBtn} onPress={confirmDeleteAccount} disabled={deletingAccount}>
+            {deletingAccount ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.deleteBtnText}>Eliminar cuenta y todos mis datos</Text>}
           </TouchableOpacity>
         </View>
       )}
 
       {error && <Text style={styles.error}>{error}</Text>}
       {notice && <Text style={styles.notice}>{notice}</Text>}
-
-      <Text style={styles.footer}>
-        Plan Gratis incluye marca PedidoListo. Pro $99/mes para quitarla.
-      </Text>
     </ScrollView>
   );
 }
@@ -766,6 +756,40 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   content: { padding: 20, paddingBottom: 40 },
   title: { fontSize: 28, lineHeight: 34, fontWeight: '900', color: colors.text, letterSpacing: -0.7 },
   subtitle: { fontSize: 14, color: colors.muted, marginTop: 3, marginBottom: 14 },
+  backButton: { alignSelf: 'flex-start', paddingVertical: 8, paddingRight: 18, marginBottom: 8 },
+  backButtonText: { color: colors.accentDark, fontSize: 16, fontWeight: '800' },
+  profileMenu: {
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 22,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+  },
+  profileItem: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  profileIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accentSoft,
+  },
+  profileIconDanger: { backgroundColor: colors.dangerSoft },
+  profileIconText: { color: colors.accentDark, fontSize: 18, fontWeight: '900' },
+  profileItemCopy: { flex: 1, marginLeft: 12 },
+  profileItemTitle: { color: colors.text, fontSize: 15, fontWeight: '800' },
+  profileItemDescription: { color: colors.muted, fontSize: 12, marginTop: 3 },
+  profileTextDanger: { color: colors.danger },
+  profileChevron: { color: colors.muted, fontSize: 25, marginLeft: 8 },
   themePicker: { flexDirection: 'row', gap: 10, marginBottom: 8 },
   themeOption: {
     flex: 1,

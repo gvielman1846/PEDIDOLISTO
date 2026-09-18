@@ -5,6 +5,7 @@ import { CategoryFilter } from './components/CategoryFilter';
 import { ProductCard } from './components/ProductCard';
 import { CartBar } from './components/CartBar';
 import { CheckoutSheet } from './components/CheckoutSheet';
+import { HelpPage } from './pages/HelpPage';
 import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
 import {
@@ -154,7 +155,7 @@ function CatalogView({ business, categories, products, source }: ReadyCatalog) {
   );
 }
 
-function App() {
+function CatalogApp() {
   const catalog = useCatalog();
 
   if (catalog.status === 'loading') {
@@ -200,6 +201,12 @@ function App() {
       source={catalog.source}
     />
   );
+}
+
+function App() {
+  const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+  if (path === 'ayuda') return <HelpPage />;
+  return <CatalogApp />;
 }
 
 export default App;

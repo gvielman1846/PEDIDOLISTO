@@ -109,6 +109,9 @@ export async function createOwnerBusiness(
   ownerId: string,
   input: CreateBusinessInput
 ): Promise<Business> {
+  if (input.slug.trim().toLowerCase() === 'ayuda') {
+    throw new Error('El link "ayuda" esta reservado. Elige otro para tu negocio.');
+  }
   const existing = await getBusinessBySlug(input.slug);
   if (existing) throw new Error('Ese link de catalogo ya esta en uso.');
 
