@@ -54,7 +54,7 @@ export function PrivacyPage() {
           <p>
             El responsable del tratamiento es el operador de PedidoListo. Para ejercer derechos o
             hacer preguntas sobre privacidad escribe a{' '}
-            <a href="mailto:pedidotlistomx@gmail.com">pedidotlistomx@gmail.com</a>.
+            <a href="mailto:pedidolistomx@gmail.com">pedidolistomx@gmail.com</a>.
           </p>
         </section>
 
@@ -164,7 +164,7 @@ export function PrivacyPage() {
           <span className="help-number">07</span>
           <h2>Contacto y cambios</h2>
           <p>
-            Dudas sobre este aviso: <a href="mailto:pedidotlistomx@gmail.com">pedidotlistomx@gmail.com</a>.
+            Dudas sobre este aviso: <a href="mailto:pedidolistomx@gmail.com">pedidolistomx@gmail.com</a>.
             Guía de uso: <a href="/ayuda">pedidolisto.mx/ayuda</a>.
           </p>
           <p>
