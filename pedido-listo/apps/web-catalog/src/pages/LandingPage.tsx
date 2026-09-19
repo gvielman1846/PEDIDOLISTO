@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import './LandingPage.css';
 
-const APK_URL = 'https://expo.dev/artifacts/eas/g0BzbUkmUzPGZ9-olujyDrXROD0ACIVmTmU56hWk0co.apk';
+const APK_URL = 'https://expo.dev/artifacts/eas/NZSX15MkTXPkvq3_a_HIy3oMH_5wzuAbF3hB30njxL8.apk';
 
 const industries = [
   { icon: '🍽️', name: 'Comida', example: 'Menús, bebidas y entregas' },
@@ -184,9 +184,6 @@ export function LandingPage() {
             <span className="marketing-eyebrow">TU NEGOCIO, EN MOVIMIENTO</span>
             <h2>Tu próxima venta puede empezar con un link.</h2>
             <p>Crea tu cuenta, publica tus productos y convierte conversaciones en pedidos organizados.</p>
-            <small className="marketing-final__note">
-              Al instalar, abre la app y vuelve a abrirla para recibir la versión más reciente.
-            </small>
           </div>
           <div className="marketing-actions">
             <a className="marketing-btn marketing-btn--light" href={APK_URL}>Descargar PedidoListo</a>
