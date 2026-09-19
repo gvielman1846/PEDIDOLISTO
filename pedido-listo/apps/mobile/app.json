@@ -2,17 +2,17 @@
   "expo": {
     "name": "PedidoListo",
     "slug": "pedido-listo-cocina",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.pedidolisto.cocina"
+      "bundleIdentifier": "mx.pedidolisto.app"
     },
     "android": {
-      "package": "com.pedidolisto.cocina",
-      "versionCode": 5,
+      "package": "mx.pedidolisto.app",
+      "versionCode": 7,
       "adaptiveIcon": {
         "backgroundColor": "#F97316",
         "foregroundImage": "./assets/android-icon-foreground.png",
