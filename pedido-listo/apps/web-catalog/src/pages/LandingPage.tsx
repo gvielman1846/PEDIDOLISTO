@@ -202,6 +202,7 @@ export function LandingPage() {
         <div>
           <a href="/ayuda">Ayuda</a>
           <a href="/privacidad">Privacidad</a>
+          <a href="/terminos">Términos</a>
           <a href="/cocina-chef-cueto">Catálogo demo</a>
         </div>
       </footer>

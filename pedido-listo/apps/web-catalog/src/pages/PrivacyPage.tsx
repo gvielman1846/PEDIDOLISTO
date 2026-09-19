@@ -166,6 +166,7 @@ export function PrivacyPage() {
           <p>
             Dudas sobre este aviso: <a href="mailto:pedidolistomx@gmail.com">pedidolistomx@gmail.com</a>.
             Guía de uso: <a href="/ayuda">pedidolisto.mx/ayuda</a>.
+            Términos: <a href="/terminos">pedidolisto.mx/terminos</a>.
           </p>
           <p>
             Si el tratamiento cambia de forma relevante, actualizaremos esta página y la fecha
@@ -182,7 +183,7 @@ export function PrivacyPage() {
         </section>
       </main>
 
-      <footer className="help-footer">PedidoListo · Aviso de privacidad · {UPDATED_AT}</footer>
+      <footer className="help-footer">PedidoListo · Aviso de privacidad · {UPDATED_AT} · <a href="/terminos">Términos</a></footer>
     </div>
   );
 }

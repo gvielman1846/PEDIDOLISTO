@@ -109,7 +109,7 @@ export async function createOwnerBusiness(
   ownerId: string,
   input: CreateBusinessInput
 ): Promise<Business> {
-  const reservedSlugs = new Set(['ayuda', 'admin', 'privacidad']);
+  const reservedSlugs = new Set(['ayuda', 'admin', 'privacidad', 'terminos']);
   if (reservedSlugs.has(input.slug.trim().toLowerCase())) {
     throw new Error(`El link "${input.slug.trim()}" esta reservado. Elige otro para tu negocio.`);
   }

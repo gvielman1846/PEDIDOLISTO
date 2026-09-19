@@ -9,6 +9,7 @@ import { HelpPage } from './pages/HelpPage';
 import { LandingPage } from './pages/LandingPage';
 import { AdminPage } from './pages/AdminPage';
 import { PrivacyPage } from './pages/PrivacyPage';
+import { TermsPage } from './pages/TermsPage';
 import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
 import {
@@ -211,6 +212,7 @@ function App() {
   if (!path) return <LandingPage />;
   if (path === 'ayuda') return <HelpPage />;
   if (path === 'privacidad') return <PrivacyPage />;
+  if (path === 'terminos') return <TermsPage />;
   if (path === 'admin' || path.startsWith('admin/')) return <AdminPage />;
   return <CatalogApp />;
 }

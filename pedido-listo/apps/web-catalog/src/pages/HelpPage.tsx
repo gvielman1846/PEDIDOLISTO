@@ -147,7 +147,7 @@ export function HelpPage() {
         </section>
       </main>
 
-      <footer className="help-footer">PedidoListo · Tu negocio, en movimiento · <a href="/privacidad">Privacidad</a></footer>
+      <footer className="help-footer">PedidoListo · Tu negocio, en movimiento · <a href="/privacidad">Privacidad</a> · <a href="/terminos">Términos</a></footer>
     </div>
   );
 }
