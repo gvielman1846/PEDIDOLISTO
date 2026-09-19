@@ -199,7 +199,11 @@ export function LandingPage() {
       <footer className="marketing-footer">
         <a className="marketing-logo" href="/">PedidoListo</a>
         <p>Catálogo y pedidos para negocios que venden por WhatsApp.</p>
-        <div><a href="/ayuda">Ayuda</a><a href="/cocina-chef-cueto">Catálogo demo</a></div>
+        <div>
+          <a href="/ayuda">Ayuda</a>
+          <a href="/privacidad">Privacidad</a>
+          <a href="/cocina-chef-cueto">Catálogo demo</a>
+        </div>
       </footer>
     </div>
   );

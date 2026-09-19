@@ -8,6 +8,7 @@ import { CheckoutSheet } from './components/CheckoutSheet';
 import { HelpPage } from './pages/HelpPage';
 import { LandingPage } from './pages/LandingPage';
 import { AdminPage } from './pages/AdminPage';
+import { PrivacyPage } from './pages/PrivacyPage';
 import { useCart } from './hooks/useCart';
 import { useCatalog } from './hooks/useCatalog';
 import {
@@ -209,6 +210,7 @@ function App() {
   const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
   if (!path) return <LandingPage />;
   if (path === 'ayuda') return <HelpPage />;
+  if (path === 'privacidad') return <PrivacyPage />;
   if (path === 'admin' || path.startsWith('admin/')) return <AdminPage />;
   return <CatalogApp />;
 }
