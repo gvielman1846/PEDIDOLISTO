@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import './LandingPage.css';
 
 const APK_URL = 'https://expo.dev/artifacts/eas/NZSX15MkTXPkvq3_a_HIy3oMH_5wzuAbF3hB30njxL8.apk';
+// Actualizar junto con APK_URL cada vez que se publique una build nueva.
+const APK_VERSION = '1.4.0';
 
 const industries = [
   { icon: '🍽️', name: 'Comida', example: 'Menús, bebidas y entregas' },
@@ -60,6 +62,7 @@ export function LandingPage() {
               <a className="marketing-btn marketing-btn--primary" href={APK_URL}>Empezar gratis en Android</a>
               <a className="marketing-btn marketing-btn--ghost" href="/cocina-chef-cueto">Ver catálogo de ejemplo</a>
             </div>
+            <span className="marketing-version">Android · versión {APK_VERSION}</span>
             <div className="marketing-trust">
               <span>✓ Sin app para tus clientes</span>
               <span>✓ Tu propio WhatsApp</span>
@@ -188,6 +191,7 @@ export function LandingPage() {
           <div className="marketing-actions">
             <a className="marketing-btn marketing-btn--light" href={APK_URL}>Descargar PedidoListo</a>
             <a className="marketing-btn marketing-btn--outline" href="/ayuda">Conocer cómo funciona</a>
+            <span className="marketing-version marketing-version--onDark">Android · versión {APK_VERSION}</span>
           </div>
         </section>
       </main>

@@ -131,6 +131,17 @@
 .marketing-btn--light { color: #7416a8 !important; background: #fff; }
 .marketing-btn--outline { color: #fff; border: 1px solid rgba(255, 255, 255, 0.45); }
 
+.marketing-version {
+  display: block;
+  margin-top: 14px;
+  color: #74717e;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.marketing-version--onDark { margin-top: 4px; color: rgba(255, 255, 255, 0.7); text-align: center; }
+
 .marketing-trust {
   display: flex;
   flex-wrap: wrap;
@@ -488,6 +499,7 @@
   .marketing-hero { grid-template-columns: 1fr; padding-top: 70px; text-align: center; }
   .marketing-hero__copy > p { margin-inline: auto; }
   .marketing-actions, .marketing-trust { justify-content: center; }
+  .marketing-version { text-align: center; }
   .marketing-industries > div { grid-template-columns: repeat(3, 1fr); }
   .marketing-section__intro { grid-template-columns: 1fr; }
   .marketing-features { grid-template-columns: repeat(2, 1fr); }
