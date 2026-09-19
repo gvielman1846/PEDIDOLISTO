@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import './LandingPage.css';
 
-const APK_URL = 'https://expo.dev/artifacts/eas/sJ2Pz5vHQrVzUHwrnvGNNJgfGGBN8uy1TNukIegMNQQ.apk';
+const APK_URL = 'https://expo.dev/artifacts/eas/dY38knm2G4Y2tJmxkdsOR7I5YxQ8cstJeyXocPpaR2Q.apk';
 // Actualizar junto con APK_URL cada vez que se publique una build nueva.
-const APK_VERSION = '1.4.1';
+const APK_VERSION = '1.4.2';
 
 const industries = [
   { icon: '🍽️', name: 'Comida', example: 'Menús, bebidas y entregas' },
