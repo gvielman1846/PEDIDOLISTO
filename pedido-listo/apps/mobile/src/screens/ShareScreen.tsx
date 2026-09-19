@@ -553,7 +553,6 @@ export function ShareScreen({ kitchen, accountEmail, onKitchenChange, onSelectKi
         </View>
 
         {notice && <Text style={styles.notice}>{notice}</Text>}
-        <Text style={styles.footer}>Plan Gratis incluye marca PedidoListo. Pro $99/mes para quitarla.</Text>
       </ScrollView>
     );
   }
@@ -914,11 +913,4 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     paddingHorizontal: 16,
   },
   deleteBtnText: { color: colors.onAccent, fontWeight: '900', fontSize: 15, textAlign: 'center' },
-  footer: {
-    fontSize: 12,
-    color: colors.muted,
-    textAlign: 'center',
-    marginTop: 24,
-    lineHeight: 18,
-  },
 });
