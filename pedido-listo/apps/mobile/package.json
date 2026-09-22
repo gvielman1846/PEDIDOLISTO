@@ -34,9 +34,9 @@
     "web": "expo start --web",
     "test": "tsx --test src/**/*.test.ts",
     "eas-build-pre-install": "npm install --prefix ../..",
-    "build:apk": "eas build -p android --profile preview",
-    "build:aab": "eas build -p android --profile production",
-    "build:ios": "eas build -p ios --profile production"
+    "build:apk": "npx eas-cli build -p android --profile preview",
+    "build:aab": "npx eas-cli build -p android --profile production",
+    "build:ios": "npx eas-cli build -p ios --profile production"
   },
   "private": true
 }

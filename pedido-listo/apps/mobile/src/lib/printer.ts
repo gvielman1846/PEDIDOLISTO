@@ -12,6 +12,15 @@ function friendlyPrinterError(error: unknown, fallback: string): Error {
   return new Error(nativeCause ?? message);
 }
 
+export const isPrintingSupported = Platform.OS === 'android' && EscPosPrinter !== null;
+
+function requireNativePrinter() {
+  if (!EscPosPrinter) {
+    throw new Error('La impresion Bluetooth esta disponible en Android.');
+  }
+  return EscPosPrinter;
+}
+
 async function requestBluetoothPermission(): Promise<void> {
   if (Platform.OS !== 'android') {
     throw new Error('La impresion Bluetooth esta disponible en Android.');
@@ -35,7 +44,7 @@ async function requestBluetoothPermission(): Promise<void> {
 export async function getPairedPrinters(): Promise<PairedPrinter[]> {
   await requestBluetoothPermission();
   try {
-    return await EscPosPrinter.getPairedDevices();
+    return await requireNativePrinter().getPairedDevices();
   } catch (error) {
     throw friendlyPrinterError(error, 'No se pudieron buscar impresoras.');
   }
@@ -58,7 +67,7 @@ export async function printToPrinter(
 ): Promise<void> {
   await requestBluetoothPermission();
   try {
-    await EscPosPrinter.print(printer.address, receipt);
+    await requireNativePrinter().print(printer.address, receipt);
   } catch (error) {
     throw friendlyPrinterError(error, 'No se pudo imprimir el pedido.');
   }

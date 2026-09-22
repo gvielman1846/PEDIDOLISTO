@@ -1,4 +1,4 @@
-import { requireNativeModule } from 'expo-modules-core';
+import { requireOptionalNativeModule } from 'expo-modules-core';
 
 export interface PairedPrinter {
   name: string;
@@ -10,4 +10,5 @@ interface EscPosPrinterNativeModule {
   print(address: string, text: string): Promise<boolean>;
 }
 
-export default requireNativeModule<EscPosPrinterNativeModule>('EscPosPrinter');
+// El modulo nativo solo se compila en Android; en iOS queda null en vez de romper el arranque.
+export default requireOptionalNativeModule<EscPosPrinterNativeModule>('EscPosPrinter');

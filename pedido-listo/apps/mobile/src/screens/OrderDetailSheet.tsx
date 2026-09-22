@@ -19,6 +19,7 @@ import { callCustomer, formatCustomerPhone, whatsappCustomer } from '../lib/cont
 import {
   getPairedPrinters,
   getSavedPrinter,
+  isPrintingSupported,
   printToPrinter,
   type PairedPrinter,
 } from '../lib/printer';
@@ -227,18 +228,20 @@ export function OrderDetailSheet({ order, businessId, businessName, role, onClos
             )}
           </ScrollView>
 
-          <TouchableOpacity
-            style={styles.printBtn}
-            onPress={() => handlePrint()}
-            disabled={printing}
-          >
-            {printing ? (
-              <ActivityIndicator color={colors.accent} />
-            ) : (
-              <Text style={styles.printText}>🖨 Imprimir</Text>
-            )}
-          </TouchableOpacity>
-          {savedPrinter && !printing && (
+          {isPrintingSupported && (
+            <TouchableOpacity
+              style={styles.printBtn}
+              onPress={() => handlePrint()}
+              disabled={printing}
+            >
+              {printing ? (
+                <ActivityIndicator color={colors.accent} />
+              ) : (
+                <Text style={styles.printText}>🖨 Imprimir</Text>
+              )}
+            </TouchableOpacity>
+          )}
+          {isPrintingSupported && savedPrinter && !printing && (
             <TouchableOpacity onPress={() => handlePrint(true)} style={styles.changePrinterBtn}>
               <Text style={styles.changePrinterText}>
                 Impresora: {savedPrinter.name} · Cambiar
