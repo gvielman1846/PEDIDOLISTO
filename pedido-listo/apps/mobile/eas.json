@@ -17,10 +17,18 @@
     "production": {
       "environment": "production",
       "node": "22.13.0",
+      "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
       },
       "channel": "production"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "language": "es-MX"
+      }
     }
   }
 }

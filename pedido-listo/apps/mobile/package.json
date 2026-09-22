@@ -35,7 +35,8 @@
     "test": "tsx --test src/**/*.test.ts",
     "eas-build-pre-install": "npm install --prefix ../..",
     "build:apk": "eas build -p android --profile preview",
-    "build:aab": "eas build -p android --profile production"
+    "build:aab": "eas build -p android --profile production",
+    "build:ios": "eas build -p ios --profile production"
   },
   "private": true
 }
