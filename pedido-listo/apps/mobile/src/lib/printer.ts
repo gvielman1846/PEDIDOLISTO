@@ -15,6 +15,18 @@ function friendlyPrinterError(error: unknown, fallback: string): Error {
 export const isPrintingSupported =
   (Platform.OS === 'android' || Platform.OS === 'ios') && EscPosPrinter !== null;
 
+// Android imprime por Bluetooth Classic y solo ve equipos ya emparejados;
+// iOS usa BLE y descubre la impresora en el momento.
+export const printerDiscoveryHint =
+  Platform.OS === 'android'
+    ? 'Se muestran las impresoras emparejadas en Ajustes > Bluetooth.'
+    : 'Se muestran las impresoras Bluetooth disponibles cerca del telefono.';
+
+export const printerNotFoundMessage =
+  Platform.OS === 'android'
+    ? 'Enciende la impresora y emparejala en Ajustes > Bluetooth; despues vuelve a intentar.'
+    : 'Enciende la impresora, acercala al telefono y vuelve a intentar.';
+
 function requireNativePrinter() {
   if (!EscPosPrinter) {
     throw new Error('La impresion Bluetooth no esta disponible en esta instalacion.');

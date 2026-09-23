@@ -20,6 +20,8 @@ import {
   getPairedPrinters,
   getSavedPrinter,
   isPrintingSupported,
+  printerDiscoveryHint,
+  printerNotFoundMessage,
   printToPrinter,
   type PairedPrinter,
 } from '../lib/printer';
@@ -96,10 +98,7 @@ export function OrderDetailSheet({ order, businessId, businessName, role, onClos
     try {
       const paired = await getPairedPrinters();
       if (paired.length === 0) {
-        Alert.alert(
-          'No se encontro la impresora',
-          'Enciende la impresora, acercala al telefono y vuelve a intentar.'
-        );
+        Alert.alert('No se encontro la impresora', printerNotFoundMessage);
         return;
       }
 
@@ -276,9 +275,7 @@ export function OrderDetailSheet({ order, businessId, businessName, role, onClos
             <Pressable style={styles.printerBackdrop} onPress={() => setPrinterPickerOpen(false)} />
             <View style={styles.printerCard}>
               <Text style={styles.printerTitle}>Selecciona la impresora</Text>
-              <Text style={styles.printerHint}>
-                Se muestran las impresoras Bluetooth disponibles cerca del telefono.
-              </Text>
+              <Text style={styles.printerHint}>{printerDiscoveryHint}</Text>
               {printers.map((printer) => (
                 <TouchableOpacity
                   key={printer.address}

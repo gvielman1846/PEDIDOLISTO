@@ -1,7 +1,9 @@
 package com.pedidolisto.escpos
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.util.Log
 import expo.modules.kotlin.functions.Coroutine
@@ -14,6 +16,7 @@ private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34
 private const val TAG = "PedidoListoPrinter"
 private const val CHUNK_SIZE = 128
 
+@SuppressLint("MissingPermission")
 class EscPosPrinterModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("EscPosPrinter")
@@ -25,7 +28,6 @@ class EscPosPrinterModule : Module() {
         throw Exception("Enciende el Bluetooth del telefono.")
       }
 
-      @SuppressLint("MissingPermission")
       adapter.bondedDevices
         .sortedBy { it.name ?: it.address }
         .map {
@@ -43,17 +45,20 @@ class EscPosPrinterModule : Module() {
         throw Exception("Enciende el Bluetooth del telefono.")
       }
 
-      @SuppressLint("MissingPermission")
       val device = adapter.getRemoteDevice(address)
-      adapter.cancelDiscovery()
+      if (device.bondState != BluetoothDevice.BOND_BONDED) {
+        throw Exception(
+          "${device.name ?: "La impresora"} ya no esta emparejada. " +
+            "Emparejala en Ajustes > Bluetooth y vuelve a intentar."
+        )
+      }
 
-      // Las impresoras termicas genericas usan Bluetooth Classic SPP.
-      @SuppressLint("MissingPermission")
-      val socket = device.createInsecureRfcommSocketToServiceRecord(SPP_UUID)
+      // cancelDiscovery exige BLUETOOTH_SCAN desde Android 12 y la app no lo pide;
+      // si falla no importa, solo es para liberar la radio antes de conectar.
+      runCatching { adapter.cancelDiscovery() }
+
+      val socket = openSocket(device)
       try {
-        Log.i(TAG, "Conectando por SPP a ${device.name} (${device.address})")
-        socket.connect()
-        Log.i(TAG, "Conexion SPP lista")
         socket.outputStream.use { output ->
           output.write(byteArrayOf(0x1B, 0x40)) // ESC @: inicializar
           output.flush()
@@ -85,10 +90,9 @@ class EscPosPrinterModule : Module() {
           Thread.sleep(1500)
         }
       } catch (error: Exception) {
-        Log.e(TAG, "Fallo de impresion", error)
+        Log.e(TAG, "Fallo al enviar el trabajo", error)
         throw Exception(
-          "No se pudo conectar con ${device.name ?: "la impresora"}. " +
-            "Verifica que este encendida y emparejada.",
+          "Se perdio la conexion con ${device.name ?: "la impresora"} mientras imprimia.",
           error
         )
       } finally {
@@ -98,6 +102,48 @@ class EscPosPrinterModule : Module() {
       true
     }
   }
+
+  /**
+   * Muchas termicas economicas no publican el servicio SPP, y en esos equipos
+   * createInsecureRfcommSocketToServiceRecord falla al conectar. El canal RFCOMM 1
+   * por reflexion es el camino que si funciona con ellas.
+   */
+  private fun openSocket(device: BluetoothDevice): BluetoothSocket {
+    val serviceSocket = device.createInsecureRfcommSocketToServiceRecord(SPP_UUID)
+    try {
+      Log.i(TAG, "Conectando por SPP a ${device.name} (${device.address})")
+      serviceSocket.connect()
+      Log.i(TAG, "Conexion SPP lista")
+      return serviceSocket
+    } catch (sppError: Exception) {
+      runCatching { serviceSocket.close() }
+      Log.w(TAG, "SPP fallo, intentando canal RFCOMM 1", sppError)
+
+      val fallbackSocket = runCatching {
+        val factory = device.javaClass.getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
+        factory.invoke(device, 1) as BluetoothSocket
+      }.getOrElse {
+        Log.e(TAG, "No se pudo crear el socket alterno", it)
+        throw connectionError(device, sppError)
+      }
+
+      try {
+        fallbackSocket.connect()
+        Log.i(TAG, "Conexion lista por canal RFCOMM 1")
+        return fallbackSocket
+      } catch (fallbackError: Exception) {
+        runCatching { fallbackSocket.close() }
+        Log.e(TAG, "Canal RFCOMM 1 tambien fallo", fallbackError)
+        throw connectionError(device, fallbackError)
+      }
+    }
+  }
+
+  private fun connectionError(device: BluetoothDevice, cause: Exception) = Exception(
+    "No se pudo conectar con ${device.name ?: "la impresora"}. " +
+      "Verifica que este encendida, con papel y sin otro telefono conectado.",
+    cause
+  )
 
   private val bluetoothManager: BluetoothManager
     get() {
