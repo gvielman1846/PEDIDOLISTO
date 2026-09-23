@@ -10,7 +10,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "mx.pedidolisto.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSBluetoothAlwaysUsageDescription": "PedidoListo usa Bluetooth para buscar y conectar tu impresora termica."
       }
     },
     "android": {

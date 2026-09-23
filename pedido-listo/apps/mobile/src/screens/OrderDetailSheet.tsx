@@ -97,8 +97,8 @@ export function OrderDetailSheet({ order, businessId, businessName, role, onClos
       const paired = await getPairedPrinters();
       if (paired.length === 0) {
         Alert.alert(
-          'No hay impresoras emparejadas',
-          'Enciende la impresora y emparejala primero desde Ajustes > Bluetooth del telefono.'
+          'No se encontro la impresora',
+          'Enciende la impresora, acercala al telefono y vuelve a intentar.'
         );
         return;
       }
@@ -277,7 +277,7 @@ export function OrderDetailSheet({ order, businessId, businessName, role, onClos
             <View style={styles.printerCard}>
               <Text style={styles.printerTitle}>Selecciona la impresora</Text>
               <Text style={styles.printerHint}>
-                Se muestran los dispositivos emparejados en Ajustes de Bluetooth.
+                Se muestran las impresoras Bluetooth disponibles cerca del telefono.
               </Text>
               {printers.map((printer) => (
                 <TouchableOpacity

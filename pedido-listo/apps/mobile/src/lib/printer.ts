@@ -12,19 +12,20 @@ function friendlyPrinterError(error: unknown, fallback: string): Error {
   return new Error(nativeCause ?? message);
 }
 
-export const isPrintingSupported = Platform.OS === 'android' && EscPosPrinter !== null;
+export const isPrintingSupported =
+  (Platform.OS === 'android' || Platform.OS === 'ios') && EscPosPrinter !== null;
 
 function requireNativePrinter() {
   if (!EscPosPrinter) {
-    throw new Error('La impresion Bluetooth esta disponible en Android.');
+    throw new Error('La impresion Bluetooth no esta disponible en esta instalacion.');
   }
   return EscPosPrinter;
 }
 
 async function requestBluetoothPermission(): Promise<void> {
-  if (Platform.OS !== 'android') {
-    throw new Error('La impresion Bluetooth esta disponible en Android.');
-  }
+  // CoreBluetooth presenta el permiso del sistema al escanear por primera vez en iOS.
+  if (Platform.OS === 'ios') return;
+  if (Platform.OS !== 'android') throw new Error('Bluetooth no esta disponible.');
   if (Platform.Version < 31) return;
 
   const result = await PermissionsAndroid.request(
